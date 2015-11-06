@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections, OverloadedStrings #-}
 -- | Parse episode data from episode titles and file names.
 module Nyanbda.Parser (
     -- * Parsing episode titles
@@ -8,8 +8,11 @@ module Nyanbda.Parser (
     pWesternFormat, pAnimeFormat
   ) where
 import Control.Monad
-import Data.List
 import Data.Char
+import Data.List
+import Data.Text (pack)
+import Network.Mime
+import System.FilePath (dropExtension)
 import Text.Parsec.String
 import Text.Parsec.Char
 import Text.Parsec
@@ -38,16 +41,18 @@ pWesternFormat :: Parser Episode
 pWesternFormat = try $ do
   name <- pWesternName
   mse <- optionMaybe pWesternEpisode
+  let season  = fst <$> mse
+      episode = snd <$> mse
   spaces'
-  mres <- optionMaybe pResolution
+  res <- option Other pResolution
   skipMany $ noneOf "-"
   mgroup <- optionMaybe . try $ char '-' *> many1 (noneOf " [.-")
   pure $ Episode {
       releaseGroup  = mgroup,
-      resolution    = maybe Other id mres,
-      seriesName    = trim name,
-      seasonNumber  = fst <$> mse,
-      episodeNumber = snd <$> mse,
+      resolution    = res,
+      seriesName    = trim $ addSpaces $ fixExt season episode res name,
+      seasonNumber  = season,
+      episodeNumber = episode,
       torrentLink   = ""
     }
 
@@ -55,10 +60,7 @@ pWesternFormat = try $ do
 --   number. Season + episode is not included, but only used as an end
 --   marker.
 pWesternName :: Parser String
-pWesternName = trim . map fixString <$> manyTill' anyChar pWesternEpisode
-  where
-    fixString '.' = ' '
-    fixString c   = c
+pWesternName = manyTill' anyChar pWesternEpisode
 
 -- | Like 'manyTill', but does not consume the terminator.
 manyTill' :: Parser a -> Parser b -> Parser [a]
@@ -96,7 +98,7 @@ pAnimeFormat = try $ do
     pure $ Episode {
         releaseGroup  = fmap trim grp,
         resolution    = res,
-        seriesName    = trim name,
+        seriesName    = trim $ addSpaces $ fixExt season episode res name,
         seasonNumber  = season,
         episodeNumber = episode,
         torrentLink   = ""
@@ -106,15 +108,36 @@ pAnimeFormat = try $ do
     firstRight def (Left _ : xs) = firstRight def xs
     firstRight def []            = def
 
+-- | Drop known file extension if season, episode and resolution are unknown.
+fixExt :: Maybe Int -> Maybe Int -> Resolution -> String -> String
+fixExt Nothing Nothing Other = dropKnownExtension
+fixExt _ _ _                 = id
+
+
 -- | Remove leading and trailing spaces.
 trim :: String -> String
 trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
+-- | Replace full stops and underscores by spaces.
+addSpaces :: String -> String
+addSpaces = map (\c -> if c == '.' || c == '_' then ' ' else c)
+
+-- | Drop the file extension and trailing period from a file name for known
+--   file extensions.
+dropKnownExtension :: String -> String
+dropKnownExtension s =
+  case mimeByExt defaultMimeMap "" (pack s) of
+    "" -> s
+    _  -> dropExtension s
+
+-- | Zero or more spaces, underscores or full stops.
 spaces' :: Parser ()
 spaces' = void $ many space'
 
+-- | A space character, an underscore, or a full stop; chars commonly used as
+--   spaces in file names.
 space' :: Parser Char
-space' = choice [space, char '_', char '.']
+space' = space <|> oneOf "_."
 
 -- | Read a series name and season + episode numbers.
 pNameAndNumber :: Parser (String, Maybe Int, Maybe Int)
