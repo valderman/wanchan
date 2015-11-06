@@ -24,8 +24,23 @@ data Episode = Episode {
     episodeNumber :: Maybe Int,
 
     -- | URL of a .torrent file for this episode.
-    torrentLink   :: URL
+    torrentLink   :: URL,
+
+    -- | Extension of the file, if known.
+    fileExtension :: Maybe String
   } deriving Show
+
+-- | An episode with no information whatsoever.
+nullEpisode :: Episode
+nullEpisode = Episode {
+    releaseGroup  = Nothing,
+    resolution    = Other,
+    seriesName    = "",
+    seasonNumber  = Nothing,
+    episodeNumber = Nothing,
+    torrentLink   = "",
+    fileExtension = Nothing
+  }
 
 -- | Count the number of complete fields in an 'Episode'.
 countComplete :: Episode -> Int

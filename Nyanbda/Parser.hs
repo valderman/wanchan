@@ -12,7 +12,7 @@ import Data.Char
 import Data.List
 import Data.Text (pack)
 import Network.Mime
-import System.FilePath (dropExtension)
+import System.FilePath (takeExtension, dropExtension)
 import Text.Parsec.String
 import Text.Parsec.Char
 import Text.Parsec
@@ -22,7 +22,7 @@ import Nyanbda.Types
 parseEpisode :: String -> Episode
 parseEpisode s =
   case parseEpisodeFrom [pAnimeFormat, pWesternFormat] s of
-    Just e -> e
+    Just e -> e {fileExtension = takeKnownExtension s}
     _      -> error $ "Impossibly failed to parse episode: " ++ s
 
 -- | Parse an episode from one of the given formats. If more than one parser
@@ -47,13 +47,12 @@ pWesternFormat = try $ do
   res <- option Other pResolution
   skipMany $ noneOf "-"
   mgroup <- optionMaybe . try $ char '-' *> many1 (noneOf " [.-")
-  pure $ Episode {
+  pure $ nullEpisode {
       releaseGroup  = mgroup,
       resolution    = res,
       seriesName    = trim $ addSpaces $ fixExt season episode res name,
       seasonNumber  = season,
-      episodeNumber = episode,
-      torrentLink   = ""
+      episodeNumber = episode
     }
 
 -- | Parse a western style series name: a sentence followed by a season/episode
@@ -95,13 +94,12 @@ pAnimeFormat = try $ do
     (name, season, episode) <- pNameAndNumber
     skipMany $ noneOf "[("
     res <- firstRight Other . map (parse pResolution "") <$> many pTag
-    pure $ Episode {
+    pure $ nullEpisode {
         releaseGroup  = fmap trim grp,
         resolution    = res,
         seriesName    = trim $ addSpaces $ fixExt season episode res name,
         seasonNumber  = season,
-        episodeNumber = episode,
-        torrentLink   = ""
+        episodeNumber = episode
       }
   where
     firstRight _   (Right x : _) = x
@@ -129,6 +127,13 @@ dropKnownExtension s =
   case mimeByExt defaultMimeMap "" (pack s) of
     "" -> s
     _  -> dropExtension s
+
+-- | Return the known file extension of a file, if any.
+takeKnownExtension :: String -> Maybe String
+takeKnownExtension s =
+  case mimeByExt defaultMimeMap "" (pack s) of
+    "" -> Nothing
+    _  -> Just $ takeExtension s
 
 -- | Zero or more spaces, underscores or full stops.
 spaces' :: Parser ()
