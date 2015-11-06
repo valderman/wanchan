@@ -1,4 +1,12 @@
-module Nyanbda.Parser where
+{-# LANGUAGE TupleSections #-}
+-- | Parse episode data from episode titles and file names.
+module Nyanbda.Parser (
+    -- * Parsing episode titles
+    parseEpisode, parseEpisodeFrom,
+
+    -- * Episode title formats
+    pWesternFormat, pAnimeFormat
+  ) where
 import Control.Monad
 import Data.List
 import Data.Char
@@ -23,26 +31,6 @@ parseEpisodeFrom formats s =
   case [ep | fmt <- formats, Right ep <- [parse fmt "" s]] of
     [] -> Nothing
     xs -> Just $ maximumBy completeness (reverse xs)
-
--- | Count the number of complete fields in an 'Episode'.
-countComplete :: Episode -> Int
-countComplete e =
-    sum [ oneIf releaseGroup
-        , oneIf (mstr . seriesName)
-        , oneIf (mstr . torrentLink)
-        , oneIf (mres . resolution)
-        , oneIf seasonNumber
-        , oneIf episodeNumber]
-  where
-    mres Other = Nothing
-    mres r     = Just r
-    mstr "" = Nothing
-    mstr n  = Just n
-    oneIf field = maybe 0 (const 1) (field e)
-
--- | Compare two episodes for completeness of information.
-completeness :: Episode -> Episode -> Ordering
-completeness a b = countComplete a `compare` countComplete b
 
 -- | Parse an episode title in the western style:
 --   @Show name SxxEyy 720p-GROUP@
@@ -102,15 +90,15 @@ pAnimeFormat :: Parser Episode
 pAnimeFormat = try $ do
     grp <- optionMaybe pTag
     spaces'
-    (name, number) <- pNameAndNumber []
+    (name, season, episode) <- pNameAndNumber
     skipMany $ noneOf "[("
     res <- firstRight Other . map (parse pResolution "") <$> many pTag
     pure $ Episode {
         releaseGroup  = fmap trim grp,
         resolution    = res,
         seriesName    = trim name,
-        seasonNumber  = Nothing,
-        episodeNumber = number,
+        seasonNumber  = season,
+        episodeNumber = episode,
         torrentLink   = ""
       }
   where
@@ -118,6 +106,7 @@ pAnimeFormat = try $ do
     firstRight def (Left _ : xs) = firstRight def xs
     firstRight def []            = def
 
+-- | Remove leading and trailing spaces.
 trim :: String -> String
 trim = reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
@@ -127,34 +116,33 @@ spaces' = void $ many space'
 space' :: Parser Char
 space' = choice [space, char '_', char '.']
 
--- | Read a series name and an episode number.
---   Attempts to read the longest episode name possible while still being able
---   to figure out an episode number.
-pNameAndNumber :: [String] -> Parser (String, Maybe Int)
-pNameAndNumber pre = try $ do
-    name <- many (noneOf "-")
-    mr <- optionMaybe . try . lookAhead $ do
-      res <- char '-' *> pNameAndNumber (name:pre)
-      pos <- getPosition
-      pure (pos, res)
-    case mr of
-      Just (pos, r@(_, Just _)) -> do
-        -- We found a name and an episode number
-        setPosition pos
-        pure r
-      Just (pos, (name', _)) -> do
-        -- No episode number, but we did find a name - try to parse a number
-        -- from what's left of the input
-        setPosition pos
-        choice [ try $ char '-' *> spaces' *> nameAndNum name integer
-               , pure (name', Nothing) ]
-      _ ->
-        -- Found nothing, so stop here
-        pure (intercalate "-" (reverse (name : pre)), Nothing)
+-- | Read a series name and season + episode numbers.
+pNameAndNumber :: Parser (String, Maybe Int, Maybe Int)
+pNameAndNumber = try $ do
+    name <- manyTill' anyChar (void pSeasonEpNumber <|> void pEpNumber)
+    choice [ bothJust name <$> pSeasonEpNumber
+           , (name, Nothing,) . Just <$> pEpNumber
+           , pure (name, Nothing, Nothing) ]
   where
-    nameAndNum name pNum = do
-      num <- pNum
-      pure (intercalate "-" (reverse (name : pre)), Just num)
+    bothJust name (x, y) = (name, Just x, Just y)
+
+-- | Parse an episode number preceeded by a dash and at least one space.
+pEpNumber :: Parser Int
+pEpNumber = try $ many1 space' *> char '-' *> many1 space' *> integer
+
+-- | Parse a season and an episode number separated by a dash and preceeded by
+--   at least one space: @ Sx - yy@
+pSeasonEpNumber :: Parser (Int, Int)
+pSeasonEpNumber = try $ do
+  many1 space'
+  season <- choice [ oneOf "sS" *> integer
+                   , string "Season" *> spaces' *> integer
+                   , string "season" *> spaces' *> integer ]
+  many1 space'
+  char '-'
+  many1 space'
+  episode <- integer
+  return (season, episode)
 
 -- | Parse a resolution string.
 --   If no resolution is recognized, the parser will fail.

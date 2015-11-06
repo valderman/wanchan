@@ -26,3 +26,23 @@ data Episode = Episode {
     -- | URL of a .torrent file for this episode.
     torrentLink   :: URL
   } deriving Show
+
+-- | Count the number of complete fields in an 'Episode'.
+countComplete :: Episode -> Int
+countComplete e =
+    sum [ oneIf releaseGroup
+        , oneIf (mstr . seriesName)
+        , oneIf (mstr . torrentLink)
+        , oneIf (mres . resolution)
+        , oneIf seasonNumber
+        , oneIf episodeNumber]
+  where
+    mres Other = Nothing
+    mres r     = Just r
+    mstr "" = Nothing
+    mstr n  = Just n
+    oneIf field = maybe 0 (const 1) (field e)
+
+-- | Compare two episodes for completeness of information.
+completeness :: Episode -> Episode -> Ordering
+completeness a b = countComplete a `compare` countComplete b
