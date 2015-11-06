@@ -124,14 +124,23 @@ space' = choice [space, char '_', char '.']
 pNameAndNumber :: [String] -> Parser (String, Maybe Int)
 pNameAndNumber pre = try $ do
     name <- many (noneOf "-")
-    mr <- optionMaybe . try . lookAhead $ char '-' *> pNameAndNumber (name:pre)
+    mr <- optionMaybe . try . lookAhead $ do
+      res <- char '-' *> pNameAndNumber (name:pre)
+      pos <- getPosition
+      pure (pos, res)
     case mr of
-      Just r@(_, Just _) ->
+      Just (pos, r@(_, Just _)) -> do
+        -- We found a name and an episode number
+        setPosition pos
         pure r
-      Just (name', _) ->
+      Just (pos, (name', _)) -> do
+        -- No episode number, but we did find a name - try to parse a number
+        -- from what's left of the input
+        setPosition pos
         choice [ try $ char '-' *> spaces' *> nameAndNum name (many1 digit)
                , pure (name', Nothing) ]
       _ ->
+        -- Found nothing, so stop here
         pure (intercalate "-" (reverse (name : pre)), Nothing)
   where
     nameAndNum name pNum = do
