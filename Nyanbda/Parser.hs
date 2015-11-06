@@ -86,10 +86,14 @@ manyTill' p end =
 pWesternEpisode :: Parser (Int, Int)
 pWesternEpisode = try $ do
   void $ oneOf "sS"
-  season <- many1 digit
+  season <- integer
   void $ oneOf "eE"
-  episode <- many1 digit
-  pure (read season, read episode)
+  episode <- integer
+  pure (season, episode)
+
+-- | Parse an integer.
+integer :: Parser Int
+integer = try $ read <$> many1 digit
 
 -- | Parses a show name in the standard anime release format:
 --   @[Group] Show Name - 03 [resolution]@
@@ -142,7 +146,7 @@ pNameAndNumber pre = try $ do
         -- No episode number, but we did find a name - try to parse a number
         -- from what's left of the input
         setPosition pos
-        choice [ try $ char '-' *> spaces' *> nameAndNum name (many1 digit)
+        choice [ try $ char '-' *> spaces' *> nameAndNum name integer
                , pure (name', Nothing) ]
       _ ->
         -- Found nothing, so stop here
@@ -150,7 +154,7 @@ pNameAndNumber pre = try $ do
   where
     nameAndNum name pNum = do
       num <- pNum
-      pure (intercalate "-" (reverse (name : pre)), Just $ read num)
+      pure (intercalate "-" (reverse (name : pre)), Just num)
 
 -- | Parse a resolution string.
 --   If no resolution is recognized, the parser will fail.
