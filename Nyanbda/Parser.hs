@@ -63,7 +63,7 @@ pWesternName = trim . map fixString <$> manyTill' anyChar pWesternEpisode
 -- | Like 'manyTill', but does not consume the terminator.
 manyTill' :: Parser a -> Parser b -> Parser [a]
 manyTill' p end =
-    (lookAhead (try end) *> pure []) <|> oneMore
+    (lookAhead (try end) *> pure []) <|> oneMore <|> eof *> pure []
   where
     oneMore = do
       x <- p
