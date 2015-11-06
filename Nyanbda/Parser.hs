@@ -48,7 +48,7 @@ completeness a b = countComplete a `compare` countComplete b
 --   @Show name SxxEyy 720p-GROUP@
 pWesternFormat :: Parser Episode
 pWesternFormat = try $ do
-  name <- pWesternName []
+  name <- pWesternName
   mse <- optionMaybe pWesternEpisode
   spaces'
   mres <- optionMaybe pResolution
@@ -66,16 +66,21 @@ pWesternFormat = try $ do
 -- | Parse a western style series name: a sentence followed by a season/episode
 --   number. Season + episode is not included, but only used as an end
 --   marker.
-pWesternName :: [String] -> Parser String
-pWesternName pre = do
-  mep <- optionMaybe $ lookAhead pWesternEpisode
-  case mep of
-    Just _ -> pure $ intercalate " " (reverse pre)
-    _      -> do
-      mname <- optionMaybe $ many1 (noneOf " .") <* spaces'
-      case mname of
-        Just name -> pWesternName (name : pre)
-        _         -> pure $ intercalate " " (reverse pre)
+pWesternName :: Parser String
+pWesternName = trim . map fixString <$> manyTill' anyChar pWesternEpisode
+  where
+    fixString '.' = ' '
+    fixString c   = c
+
+-- | Like 'manyTill', but does not consume the terminator.
+manyTill' :: Parser a -> Parser b -> Parser [a]
+manyTill' p end =
+    (lookAhead (try end) *> pure []) <|> oneMore
+  where
+    oneMore = do
+      x <- p
+      xs <- manyTill' p end
+      pure (x:xs)
 
 -- | Parse a western format season/episode qualified: @SxxExx@.
 pWesternEpisode :: Parser (Int, Int)
