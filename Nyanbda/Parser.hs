@@ -162,13 +162,11 @@ pEpNumber = try $ many1 space' *> char '-' *> many1 space' *> integer
 --   at least one space: @ Sx - yy@
 pSeasonEpNumber :: Parser (Int, Int)
 pSeasonEpNumber = try $ do
-  many1 space'
+  void $ many1 space'
   season <- choice [ oneOf "sS" *> integer
                    , string "Season" *> spaces' *> integer
                    , string "season" *> spaces' *> integer ]
-  many1 space'
-  char '-'
-  many1 space'
+  void $ many1 space' *> char '-' *> many1 space'
   episode <- integer
   return (season, episode)
 
