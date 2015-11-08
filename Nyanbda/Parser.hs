@@ -8,7 +8,7 @@ module Nyanbda.Parser (
     pWesternFormat, pAnimeFormat
   ) where
 import Control.Monad
-import Data.Char
+import Data.Char (isSpace)
 import Data.List
 import Data.Text (pack)
 import Network.Mime
@@ -110,7 +110,6 @@ pAnimeFormat = try $ do
 fixExt :: Maybe Int -> Maybe Int -> Resolution -> String -> String
 fixExt Nothing Nothing Other = dropKnownExtension
 fixExt _ _ _                 = id
-
 
 -- | Remove leading and trailing spaces.
 trim :: String -> String

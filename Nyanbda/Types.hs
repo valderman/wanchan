@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 -- | Basic types representing episodes.
 module Nyanbda.Types where
 
@@ -61,3 +62,48 @@ countComplete e =
 -- | Compare two episodes for completeness of information.
 completeness :: Episode -> Episode -> Ordering
 completeness a b = countComplete a `compare` countComplete b
+
+-- | Serialise an episode name in standard anime format.
+episodeNameAnime :: Episode -> String
+episodeNameAnime Episode {..} =
+    concat [group, seriesName, season, episode, res]
+  where
+    group   = maybe "" (\g -> "[" ++ g ++ "] ") releaseGroup
+    season  = maybe "" ((" S" ++) . show) seasonNumber
+    episode = maybe "" ((" - " ++) . pad 2) episodeNumber
+    res     = maybe "" (\r -> " [" ++ r ++ "]") (showResolution resolution)
+
+test = nullEpisode {
+    seriesName = "Game of Thrones",
+    releaseGroup = Just "BOSSE",
+    resolution = HD1080,
+    seasonNumber = Just 2,
+    episodeNumber = Just 51
+  }
+
+-- | Serialise an episode name in standard anime format.
+episodeNameWestern :: Episode -> String
+episodeNameWestern Episode {..} =
+    concat [map toDot seriesName, episode, res, group]
+  where
+    toDot ' ' = '.'
+    toDot c   = c
+    group = maybe "" ('-':) releaseGroup
+    episode =
+      case (seasonNumber, episodeNumber) of
+        (Just s, Just e) -> concat [".S", pad 2 s, "E", pad 2 e]
+        (Just s, _)      -> concat [".Season.", show s]
+        (_, Just e)      -> concat [".Episode.", show e]
+    res = maybe "" ('.':) (showResolution resolution)
+
+-- | Show an integer padded with at most @minlen@ leading zeroes.
+pad :: Int -> Int -> String
+pad minlen n = replicate (minlen-length s) '0' ++ s
+  where s = show n
+
+-- | Show a resolution, if known.
+showResolution :: Resolution -> Maybe String
+showResolution HD1080 = Just "1080p"
+showResolution HD720  = Just "720p"
+showResolution SD480  = Just "480p"
+showResolution Other  = Nothing
