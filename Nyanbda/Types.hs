@@ -6,7 +6,7 @@ type URL = String
 
 -- | Resolution of a video file.
 data Resolution = HD1080 | HD720 | SD480 | Other
-  deriving Show
+  deriving (Show, Eq, Ord)
 
 data Episode = Episode {
     -- | The release group behind this episode.
@@ -73,14 +73,6 @@ episodeNameAnime Episode {..} =
     episode = maybe "" ((" - " ++) . pad 2) episodeNumber
     res     = maybe "" (\r -> " [" ++ r ++ "]") (showResolution resolution)
 
-test = nullEpisode {
-    seriesName = "Game of Thrones",
-    releaseGroup = Just "BOSSE",
-    resolution = HD1080,
-    seasonNumber = Just 2,
-    episodeNumber = Just 51
-  }
-
 -- | Serialise an episode name in standard anime format.
 episodeNameWestern :: Episode -> String
 episodeNameWestern Episode {..} =
@@ -94,6 +86,7 @@ episodeNameWestern Episode {..} =
         (Just s, Just e) -> concat [".S", pad 2 s, "E", pad 2 e]
         (Just s, _)      -> concat [".Season.", show s]
         (_, Just e)      -> concat [".Episode.", show e]
+        _                -> ""
     res = maybe "" ('.':) (showResolution resolution)
 
 -- | Show an integer padded with at most @minlen@ leading zeroes.

@@ -5,7 +5,10 @@ module Nyanbda.Parser (
     parseEpisode, parseEpisodeFrom,
 
     -- * Episode title formats
-    pWesternFormat, pAnimeFormat
+    pWesternFormat, pAnimeFormat,
+
+    -- * Parsing utilities
+    snub, integer, pResolution, pList, parseFlagVal
   ) where
 import Control.Monad
 import Data.Char (isSpace)
@@ -79,10 +82,6 @@ pWesternEpisode = try $ do
   void $ oneOf "eE"
   episode <- integer
   pure (season, episode)
-
--- | Parse an integer.
-integer :: Parser Int
-integer = try $ read <$> many1 digit
 
 -- | Parses a show name in the standard anime release format:
 --   @[Group] Show Name - 03 [resolution]@
@@ -190,3 +189,24 @@ pResolution =
 pTag :: Parser String
 pTag = choice [ try $ char '[' *> many1 (noneOf "]") <* char ']'
               , try $ char '(' *> many1 (noneOf ")") <* char ')' ]
+
+-- | Parse a list of one or more comma-separated words.
+pList :: Parser [String]
+pList = many1 (noneOf ",") `sepBy1` char ','
+
+-- | Parse an integer.
+integer :: Parser Int
+integer = try $ read <$> many1 digit
+
+-- | Parse a flag value. If the value could not be parser, fail with an error
+--   message about @e@ having an invalid value.
+parseFlagVal :: Parser a -> String -> String -> Either String a
+parseFlagVal p e s =
+  case parse (p <* eof) "" s of
+    Right x -> Right x
+    _       -> Left $ "invalid value for option `" ++ e ++ "'\n"
+
+-- | Sort and nub a list in O(n log n). More efficient than 'nub' when we don't
+--   care about the order of the list.
+snub :: (Ord a, Eq a) => [a] -> [a]
+snub = map head . group . sort
