@@ -20,6 +20,7 @@ executable nyanbda
     Main.hs
   other-modules:
     Nyanbda.Config,
+    Nyanbda.Filtering,
     Nyanbda.Opts,
     Nyanbda.Sources,
     Nyanbda.Sources.Nyaa,

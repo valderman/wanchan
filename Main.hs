@@ -3,6 +3,7 @@ import Control.Monad.Trans.Either
 import System.Environment
 import System.Exit
 import Nyanbda.Config
+import Nyanbda.Filtering
 import Nyanbda.Opts
 import Nyanbda.Sources
 import Nyanbda.Types
@@ -20,7 +21,7 @@ main = do
 search :: Config -> String -> IO ()
 search cfg str = do
     res <- runEitherT $ do
-      items <- concat <$> mapM (\h -> h str) handlers
+      items <- filterEpisodes cfg . concat <$> mapM (\h -> h str) handlers
       mapM_ (liftIO . putStrLn . episodeNameAnime) items
     case res of
       Left err -> putStr err >> exitFailure
