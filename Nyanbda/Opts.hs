@@ -1,5 +1,5 @@
 -- | ADT describing the command line options to 
-module Nyanbda.Opts where
+module Nyanbda.Opts (parseConfig) where
 import Control.Monad
 import Control.Monad.Trans.Either
 import Data.List (sortBy)
