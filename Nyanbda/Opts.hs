@@ -61,8 +61,8 @@ opts =
     "criteria are cleared."
   , Option "f" ["from"]       (ReqArg addSources "SOURCE") $
     "Search only the given SOURCE. This option may be given several times " ++
-    "to search multiple sources. Valid sources: " ++
-    intercalate ", " supportedSourceNames
+    "to search multiple sources. Valid sources are " ++
+    intercalate ", " supportedSourceNames ++ "."
   , Option "o" ["outdir"]     (ReqArg setOutdir "DIR") $
     "Download the corresponding torrent file for each matched episode to " ++
     "the given DIRectory. If no DIR is given, the current working " ++

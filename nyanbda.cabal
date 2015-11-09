@@ -23,6 +23,7 @@ executable nyanbda
     Nyanbda.Opts,
     Nyanbda.Sources,
     Nyanbda.Sources.Nyaa,
+    Nyanbda.Sources.RSS,
     Nyanbda.Sources.Types,
     Nyanbda.Types,
     Nyanbda.Parser
@@ -30,13 +31,15 @@ executable nyanbda
     TupleSections,
     OverloadedStrings
   build-depends:
-    base         >=4   && <5,
-    text         >=1.2 && <1.3,
-    mime-types   >=0.1 && <0.2,
-    filepath     >=1.4 && <1.5,
-    parsec       >=3   && <4,
-    transformers >=0.4 && <0.5,
-    either       >=4   && <5
+    base          >=4   && <5,
+    text          >=1.2 && <1.3,
+    mime-types    >=0.1 && <0.2,
+    filepath      >=1.4 && <1.5,
+    parsec        >=3   && <4,
+    transformers  >=0.4 && <0.5,
+    either        >=4   && <5,
+    feed          >=0.3 && <0.4,
+    download-curl >=0.1 && <0.2
   default-language:
     Haskell2010
   ghc-options:
