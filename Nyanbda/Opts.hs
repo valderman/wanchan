@@ -62,7 +62,8 @@ opts =
   , Option "f" ["from"]       (ReqArg addSources "SOURCE") $
     "Search only the given SOURCE. This option may be given several times " ++
     "to search multiple sources. Valid sources are " ++
-    intercalate ", " supportedSourceNames ++ "."
+    intercalate ", " supportedSourceNames ++ ". " ++
+    "If no source is specified, all supported sources are searched."
   , Option "o" ["outdir"]     (ReqArg setOutdir "DIR") $
     "Download the corresponding torrent file for each matched episode to " ++
     "the given DIRectory. If no DIR is given, the current working " ++
@@ -119,15 +120,22 @@ parseConfig c args = do
     ecfg <- runEitherT $ do
       unless (null errs) $ left (concat errs)
       cfg <- mkConfig c os
-      return (cfg, unwords nonopts)
+      return (applyDefaults cfg, unwords nonopts)
     case ecfg of
       Left err        -> pure $ FailWith err
       Right (cfg, search)
         | null search -> pure $ findAction noSearchStr (reverse os) cfg search
         | otherwise   -> pure $ findAction Search (reverse os) cfg search
   where
+    applyDefaults cfg
+      | null (cfgSources cfg) =
+        applyDefaults (cfg {cfgSources = supportedSources})
+      | otherwise =
+        cfg
+
     (os, nonopts, errs) = getOpt RequireOrder opts args
     noSearchStr _ _ = FailWith "no search string given\n"
+
     findAction _   (SetAction act : _) = act
     findAction def (_:xs)              = findAction def xs
     findAction def _                   = def
