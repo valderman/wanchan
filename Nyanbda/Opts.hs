@@ -1,8 +1,8 @@
 -- | ADT describing the command line options to 
-module Nyanbda.Opts (parseConfig) where
+module Nyanbda.Opts (Action (..), parseConfig) where
 import Control.Monad
 import Control.Monad.Trans.Either
-import Data.List (sortBy)
+import Data.List (sortBy, intercalate)
 import System.Console.GetOpt
 import Text.Parsec
 import Text.Parsec.String
@@ -11,10 +11,18 @@ import Nyanbda.Parser
 import Nyanbda.Sources
 import Nyanbda.Types
 
+-- | The action to be taken by the main program.
+data Action
+  = SucceedWith String
+  | FailWith    String
+  | Search      Config String
+
+-- | An option set by a config file or on the command line.
 data Option
   = ReadConfig FilePath
   | SetFlag (Config -> Either String Config)
   | SetSourceFlag (Source -> Either String Source)
+  | SetAction (Config -> String -> Action)
 
 opts :: [OptDescr Option]
 opts =
@@ -26,7 +34,7 @@ opts =
     "Only match the given EPISODEs. EPISODE may be either an " ++
     "integer or a range of integers given as 'a..b'. This option may be " ++
     "given several times to specify multiple episodes."
-  , Option "c" ["config"]     (ReqArg ReadConfig "") $
+  , Option "c" ["config"]     (ReqArg ReadConfig "FILE") $
     "Read the given configuration file before applying command line " ++
     "options. If this option is given multiple times, the configuration " ++
     "files will be read in order from left to right. " ++
@@ -42,7 +50,7 @@ opts =
   , Option "g" ["group"]      (ReqArg addGroup "GROUP") $
     "Match only episodes from the given GROUP. If this option is given " ++
     "multiple times, all indicated groups are considered acceptable."
-  , Option "r" ["resolution"] (ReqArg addRes "RESOLUTION") $
+  , Option "r" ["resolution"] (ReqArg addRes "RES") $
     "Match only episodes with the given resolution. Valid values are " ++
     "1080p, 720p and 480p. Use this option multiple times to indicate that" ++
     "multiple resolutions are acceptable."
@@ -53,22 +61,76 @@ opts =
     "criteria are cleared."
   , Option "f" ["from"]       (ReqArg addSources "SOURCE") $
     "Search only the given SOURCE. This option may be given several times " ++
-    "to search multiple sources."
+    "to search multiple sources. Valid sources: " ++
+    intercalate ", " supportedSourceNames
   , Option "o" ["outdir"]     (ReqArg setOutdir "DIR") $
     "Download the corresponding torrent file for each matched episode to " ++
     "the given DIRectory. If no DIR is given, the current working " ++
     "directory is used."
+  , Option "h?" ["help"]      (NoArg printHelp) "Display this message."
   ] ++ supportedSourceOpts
+
+-- | Print the help message, then exit.
+printHelp :: Option
+printHelp = SetAction $ \_ _ -> SucceedWith helpMessage
+  where
+    helpMessage = unlines $
+      [ "Usage: nyan [OPTIONS] SEARCH STRING"
+      , ""
+      , "Effortlessly manage downloads of TV series and other media."
+      , ""
+      ] ++ map helpString opts
+
+-- | Generate a help message, padded to 80 characters.
+helpString :: OptDescr a -> String
+helpString (Option short long opt help) =
+    shorts ++ longs ++ "\n" ++ formatHelpMessage 80 help
+  where
+    (longarg, shortarg) =
+      case opt of
+        NoArg _    -> ("", "")
+        ReqArg _ a -> ('=':a, ' ':a)
+        OptArg _ a -> ("[=" ++ a ++ "]", " [" ++ a ++ "]")
+    shorts =
+      case intercalate ", " (map (\c -> ['-',c]) short) of
+        s | null s    -> ""
+          | otherwise -> s ++ shortarg ++ ", "
+    longs =
+      case intercalate ", " (map (\s -> "--" ++ s) long) of
+        l | null l    -> ""
+          | otherwise -> l ++ longarg
+
+-- | Break lines at n chars, add two spaces before each.
+formatHelpMessage :: Int -> String -> String
+formatHelpMessage chars help =
+    unlines . map ("    " ++) . breakLines 0 [] $ words help
+  where
+    breakLines len ln (w:ws)
+      | length w >= chars-4     = w:unwords (reverse ln):breakLines 0 [] ws
+      | len+length w >= chars-4 = unwords (reverse ln):breakLines 0 [] (w:ws)
+      | otherwise               = breakLines (len+1+length w) (w:ln) ws
+    breakLines _ ln _ =
+      [unwords $ reverse ln]
 
 -- | Create a configuration from a list of command line arguments and a default
 --   config.
-parseConfig :: Config -> [String] -> IO (Either String (Config, String))
-parseConfig c args = runEitherT $ do
-    unless (null errs) $ left (concat errs)
-    cfg <- mkConfig c os
-    return (cfg, unwords nonopts)
+parseConfig :: Config -> [String] -> IO Action
+parseConfig c args = do
+    ecfg <- runEitherT $ do
+      unless (null errs) $ left (concat errs)
+      cfg <- mkConfig c os
+      return (cfg, unwords nonopts)
+    case ecfg of
+      Left err        -> pure $ FailWith err
+      Right (cfg, search)
+        | null search -> pure $ findAction noSearchStr (reverse os) cfg search
+        | otherwise   -> pure $ findAction Search (reverse os) cfg search
   where
     (os, nonopts, errs) = getOpt RequireOrder opts args
+    noSearchStr _ _ = FailWith "no search string given\n"
+    findAction _   (SetAction act : _) = act
+    findAction def (_:xs)              = findAction def xs
+    findAction def _                   = def
 
 -- | Create a configuration from a list of parsed options and a default config.
 mkConfig :: Config -> [Option] -> EitherT String IO Config
@@ -78,6 +140,8 @@ mkConfig c os = do
     optIx (ReadConfig {})    = 0 :: Int
     optIx (SetFlag {})       = 1
     optIx (SetSourceFlag {}) = 2
+    optIx (SetAction {})     = 3
+
     modifyConfig _cfg (ReadConfig _f)  = left "TODO: reading config files"
     modifyConfig cfg (SetFlag f)       = hoistEither $ f cfg
     modifyConfig cfg (SetSourceFlag f) = do
@@ -86,6 +150,7 @@ mkConfig c os = do
                    ss -> ss
       srcs' <- hoistEither $ mapM f srcs
       pure $ cfg {cfgSources = srcs'}
+    modifyConfig cfg (SetAction {})    = pure cfg
 
 -- | Parse an integer range. A single integer qualifies as a singleton range.
 pIntRange :: Parser [Int]

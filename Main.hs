@@ -6,9 +6,8 @@ import Nyanbda.Opts
 main :: IO ()
 main = do
   args <- getArgs
-  ecfg <- parseConfig defaultConfig args
-  case ecfg of
-    Left err            -> putStr err >> exitFailure
-    Right (cfg, search) -> do
-      putStrLn $ "Search string: " ++ search
-      putStrLn $ "Config: " ++ show cfg
+  act <- parseConfig defaultConfig args
+  case act of
+    SucceedWith s  -> putStr s >> exitSuccess
+    FailWith s     -> putStr s >> exitFailure
+    Search cfg str -> putStrLn "TODO: implement search"
