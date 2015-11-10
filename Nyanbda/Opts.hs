@@ -26,49 +26,53 @@ data Option
 
 opts :: [OptDescr Option]
 opts =
-  [ Option "s" ["season"]     (ReqArg addSeasons "SEASON") $
+  [ Option "s" ["season"]      (ReqArg addSeasons "SEASON") $
     "Only match episodes from the given SEASON. SEASON may be either an " ++
     "integer or a range of integers given as 'a..b'. This option may be " ++
     "given several times to specify multiple seasons."
-  , Option "e" ["episode"]    (ReqArg addEpisodes "EPISODE") $
+  , Option "e" ["episode"]     (ReqArg addEpisodes "EPISODE") $
     "Only match the given EPISODEs. EPISODE may be either an " ++
     "integer or a range of integers given as 'a..b'. This option may be " ++
     "given several times to specify multiple episodes."
-  , Option "c" ["config"]     (ReqArg ReadConfig "FILE") $
+  , Option "c" ["config"]      (ReqArg ReadConfig "FILE") $
     "Read the given configuration file before applying command line " ++
     "options. If this option is given multiple times, the configuration " ++
     "files will be read in order from left to right. " ++
     "By default, only ~/.config/nyanbda/nyan.conf will be read, if it exists."
-  , Option "l" ["latest"]     (OptArg getLatest "yes/no") $
+  , Option "l" ["latest"]      (OptArg getLatest "yes/no") $
     "Match only the latest episode of the series. If one or more " ++
     "seasons are given, the latest episode of each season will be " ++
     "matched. Use --latest=no to disable this criterion; the latest " ++
     "episode(s) may still be matched by other criteria."
-  , Option "a" ["all"]        (NoArg clearAllMatches) $
+  , Option "d" ["allow-duplicates"] (OptArg allowDupes "yes/no") $
+    "Allow several copies of the same episode, but with different " ++
+    "resolution, release group, etc. By default, only one of each episode " ++
+    "is allowed."
+  , Option "a" ["all"]         (NoArg clearAllMatches) $
     "Match any episode. Useful to override more specific matches set in " ++
     "configuration files or previously on the command line."
-  , Option "g" ["group"]      (ReqArg addGroup "GROUP") $
+  , Option "g" ["group"]       (ReqArg addGroup "GROUP") $
     "Match only episodes from the given GROUP. If this option is given " ++
     "multiple times, all indicated groups are considered acceptable."
-  , Option "r" ["resolution"] (ReqArg addRes "RES") $
+  , Option "r" ["resolution"]  (ReqArg addRes "RES") $
     "Match only episodes with the given resolution. Valid values are " ++
     "1080p, 720p and 480p. Use this option multiple times to indicate that" ++
     "multiple resolutions are acceptable."
-  , Option "t" ["type"]       (ReqArg addType "EXT") $
+  , Option "t" ["type"]        (ReqArg addType "EXT") $
     "Match only episodes with the given file extension. Use this option " ++
     "multiple times to indicate that multiple file types are acceptable. " ++
     "If EXT has the special value 'any', any previously set file types " ++
     "criteria are cleared."
-  , Option "f" ["from"]       (ReqArg addSources "SOURCE") $
+  , Option "f" ["from"]        (ReqArg addSources "SOURCE") $
     "Search only the given SOURCE. This option may be given several times " ++
     "to search multiple sources. Valid sources are " ++
     intercalate ", " supportedSourceNames ++ ". " ++
     "If no source is specified, all supported sources are searched."
-  , Option "o" ["outdir"]     (ReqArg setOutdir "DIR") $
+  , Option "o" ["outdir"]      (ReqArg setOutdir "DIR") $
     "Download the corresponding torrent file for each matched episode to " ++
     "the given DIRectory. If no DIR is given, the current working " ++
     "directory is used."
-  , Option "h?" ["help"]      (NoArg printHelp) "Display this message."
+  , Option "h?" ["help"]       (NoArg printHelp) "Display this message."
   ] ++ supportedSourceOpts
 
 -- | Print the help message, then exit.
@@ -234,6 +238,11 @@ clearAllMatches = SetFlag $ \c -> pure $ c {
     cfgSeasons = [],
     cfgEpisodes = []
   }
+
+-- | Allow duplicate episodes?
+allowDupes :: Maybe String -> Option
+allowDupes (Just "no") = SetFlag $ \c -> pure c {cfgAllowDupes = False}
+allowDupes _           = SetFlag $ \c -> pure c {cfgAllowDupes = True}
 
 -- | Always match the latest episode?
 getLatest :: Maybe String -> Option

@@ -35,7 +35,11 @@ data Config = Config {
     cfgResolutions :: [Resolution],
 
     -- | Permissible release groups.
-    cfgGroups      :: [String]
+    cfgGroups      :: [String],
+
+    -- | Allow several copies with different resolution, etc. of the same
+    --   episode?
+    cfgAllowDupes  :: Bool
   } deriving Show
 
 -- | The default configuration.
@@ -48,5 +52,6 @@ defaultConfig = Config {
     cfgMatchLatest = False,
     cfgExtensions  = [],
     cfgResolutions = [],
-    cfgGroups      = []
+    cfgGroups      = [],
+    cfgAllowDupes  = False
   }
