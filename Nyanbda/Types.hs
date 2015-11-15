@@ -5,7 +5,7 @@ module Nyanbda.Types where
 type URL = String
 
 -- | Resolution of a video file.
-data Resolution = HD1080 | HD720 | SD480 | Other
+data Resolution = HD1080 | HD720 | SD480
   deriving (Show, Eq, Ord)
 
 data Episode = Episode {
@@ -13,7 +13,7 @@ data Episode = Episode {
     releaseGroup  :: Maybe String,
 
     -- | Resolution of this video file.
-    resolution    :: Resolution,
+    resolution    :: Maybe Resolution,
 
     -- | Name of the series the episode belongs to.
     seriesName    :: String,
@@ -35,7 +35,7 @@ data Episode = Episode {
 nullEpisode :: Episode
 nullEpisode = Episode {
     releaseGroup  = Nothing,
-    resolution    = Other,
+    resolution    = Nothing,
     seriesName    = "",
     seasonNumber  = Nothing,
     episodeNumber = Nothing,
@@ -49,12 +49,10 @@ countComplete e =
     sum [ oneIf releaseGroup
         , oneIf (mstr . seriesName)
         , oneIf (mstr . torrentLink)
-        , oneIf (mres . resolution)
+        , oneIf resolution
         , oneIf seasonNumber
         , oneIf episodeNumber]
   where
-    mres Other = Nothing
-    mres r     = Just r
     mstr "" = Nothing
     mstr n  = Just n
     oneIf field = maybe 0 (const 1) (field e)
@@ -71,7 +69,7 @@ episodeNameAnime Episode {..} =
     group   = maybe "" (\g -> "[" ++ g ++ "] ") releaseGroup
     season  = maybe "" ((" S" ++) . show) seasonNumber
     episode = maybe "" ((" - " ++) . pad 2) episodeNumber
-    res     = maybe "" (\r -> " [" ++ r ++ "]") (showResolution resolution)
+    res     = maybe "" (\r -> " [" ++ r ++ "]") (showResolution <$> resolution)
 
 -- | Serialise an episode name in standard anime format.
 episodeNameWestern :: Episode -> String
@@ -87,16 +85,15 @@ episodeNameWestern Episode {..} =
         (Just s, _)      -> concat [".Season.", show s]
         (_, Just e)      -> concat [".Episode.", show e]
         _                -> ""
-    res = maybe "" ('.':) (showResolution resolution)
+    res = maybe "" ('.':) (fmap showResolution resolution)
 
 -- | Show an integer padded with at most @minlen@ leading zeroes.
 pad :: Int -> Int -> String
 pad minlen n = replicate (minlen-length s) '0' ++ s
   where s = show n
 
--- | Show a resolution, if known.
-showResolution :: Resolution -> Maybe String
-showResolution HD1080 = Just "1080p"
-showResolution HD720  = Just "720p"
-showResolution SD480  = Just "480p"
-showResolution Other  = Nothing
+-- | Human readable resolution.
+showResolution :: Resolution -> String
+showResolution HD1080 = "1080p"
+showResolution HD720  = "720p"
+showResolution SD480  = "480p"

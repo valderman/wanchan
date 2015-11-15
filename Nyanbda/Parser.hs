@@ -47,7 +47,7 @@ pWesternFormat = try $ do
   let season  = fst <$> mse
       episode = snd <$> mse
   spaces'
-  res <- option Other pResolution
+  res <- optionMaybe pResolution
   skipMany $ noneOf "-"
   mgroup <- optionMaybe . try $ char '-' *> many1 (noneOf " [.-")
   pure $ nullEpisode {
@@ -92,7 +92,7 @@ pAnimeFormat = try $ do
     spaces'
     (name, season, episode) <- pNameAndNumber
     skipMany $ noneOf "[("
-    res <- firstRight Other . map (parse pResolution "") <$> many pTag
+    res <- firstRight . map (parse pResolution "") <$> many pTag
     pure $ nullEpisode {
         releaseGroup  = fmap trim grp,
         resolution    = res,
@@ -101,14 +101,14 @@ pAnimeFormat = try $ do
         episodeNumber = episode
       }
   where
-    firstRight _   (Right x : _) = x
-    firstRight def (Left _ : xs) = firstRight def xs
-    firstRight def []            = def
+    firstRight (Right x : _) = Just x
+    firstRight (Left _ : xs) = firstRight xs
+    firstRight []            = Nothing
 
 -- | Drop known file extension if season, episode and resolution are unknown.
-fixExt :: Maybe Int -> Maybe Int -> Resolution -> String -> String
-fixExt Nothing Nothing Other = dropKnownExtension
-fixExt _ _ _                 = id
+fixExt :: Maybe Int -> Maybe Int -> Maybe Resolution -> String -> String
+fixExt Nothing Nothing Nothing = dropKnownExtension
+fixExt _ _ _                   = id
 
 -- | Remove leading and trailing spaces.
 trim :: String -> String

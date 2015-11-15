@@ -34,7 +34,9 @@ filterEpisodes (Config {..}) allEps
     groups (Episode {..})
       | Just g <- releaseGroup  = g `elem` cfgGroups
       | otherwise               = False
-    resolutions (Episode {..})  = resolution `elem` cfgResolutions
+    resolutions (Episode {..})
+      | Just r <- resolution    = r `elem` cfgResolutions
+      | otherwise               = False
 
     maybeFilter f conf
       | null conf = Nothing
@@ -48,7 +50,7 @@ chooseEpisodes = map (head . sortEpisodes) . groupEpisodes
 sortEpisodes :: [Episode] -> [Episode]
 sortEpisodes = sortBy (compareAll criteria)
   where
-    criteria = [ \a b -> resolution a `compare` resolution b
+    criteria = [ compBy resolution
                , compBy releaseGroup
                , compBy fileExtension
                ]

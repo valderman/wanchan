@@ -3,13 +3,13 @@ module Nyanbda.Opts (Action (..), parseConfig) where
 import Control.Monad
 import Control.Monad.Trans.Either
 import Data.List (sortBy, intercalate)
+import Data.Maybe (catMaybes)
 import System.Console.GetOpt
 import Text.Parsec
 import Text.Parsec.String
 import Nyanbda.Config
 import Nyanbda.Parser
 import Nyanbda.Sources
-import Nyanbda.Types
 
 -- | The action to be taken by the main program.
 data Action
@@ -215,11 +215,13 @@ addGroup g = SetFlag $ \c -> do
 addRes :: String -> Option
 addRes r = SetFlag $ \c -> do
     rs <- parseFlagVal resList "--resolution" r
-    if Other `elem` rs
+    if Nothing `elem` rs
       then pure $ c {cfgResolutions = []}
-      else pure $ c {cfgResolutions = snub $ rs ++ cfgResolutions c}
+      else pure $ c {cfgResolutions = snub $ catMaybes rs++cfgResolutions c}
   where
-    resList = (pResolution <|> (string "any" *> pure Other)) `sepBy1` char ','
+    resList =
+      (optionMaybe pResolution <|> (string "any" *> pure Nothing))
+        `sepBy1` char ','
 
 -- | Add an acceptable file format.
 addType :: String -> Option
