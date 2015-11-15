@@ -7,8 +7,6 @@ import Nyanbda.Types
 
 -- | Filter a list of episodes based on the given config.
 --   TODO: latest episode filtering
---   TODO: select episodes based on consistency; i.e. prefer to get the same
---         release group, resolution, etc. for all episodes
 filterEpisodes :: Config -> [Episode] -> [Episode]
 filterEpisodes (Config {..}) allEps
     | cfgAllowDupes = eps
