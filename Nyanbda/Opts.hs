@@ -9,6 +9,7 @@ import Text.Parsec.String
 import Nyanbda.Config
 import Nyanbda.Parser
 import Nyanbda.Sources
+import Nyanbda.Types
 
 -- | The action to be taken by the main program.
 data Action
@@ -76,6 +77,11 @@ opts =
     "Download the corresponding torrent file for each matched episode to " ++
     "the given DIRectory. If no DIR is given, the current working " ++
     "directory is used."
+  , Right $ Option "n" ["anime-style"]     (NoArg animeStyle) $
+    "Print episode names in anime style: [Group] Title Sx - yy [resolution]."++
+    " This is the default."
+  , Right $ Option "w" ["western-style"]   (NoArg westernStyle) $
+    "Print episode names in western style: Title.SxxEyy.resolution-group."
 
   , Left "Torrent source options"
   , Right $ Option "f" ["from"]        (ReqArg addSources "SOURCE") $
@@ -305,3 +311,11 @@ addSources src = SetFlag $ \c -> do
 -- | Set the output directory.
 setOutdir :: FilePath -> Option
 setOutdir dir = SetFlag $ \c -> pure c {cfgOutdir = Just dir}
+
+-- | Set anime style name display.
+animeStyle :: Option
+animeStyle = SetFlag $ \c -> pure c {cfgNameStyle = episodeNameAnime}
+
+-- | Set western style name display.
+westernStyle :: Option
+westernStyle = SetFlag $ \c -> pure c {cfgNameStyle = episodeNameWestern}

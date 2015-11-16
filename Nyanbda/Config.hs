@@ -13,6 +13,9 @@ data Config = Config {
     -- | Sources to search.
     cfgSources     :: [Source],
 
+    -- | Print episode names in which style?
+    cfgNameStyle   :: Episode -> String,
+
     
     -- * Episode filters
     
@@ -40,13 +43,18 @@ data Config = Config {
     -- | Allow several copies with different resolution, etc. of the same
     --   episode?
     cfgAllowDupes  :: Bool
-  } deriving Show
+  }
+
+-- | Show an episode name appropriately according to config.
+episodeName :: Config -> Episode -> String
+episodeName = cfgNameStyle
 
 -- | The default configuration.
 defaultConfig :: Config
 defaultConfig = Config {
     cfgOutdir      = Nothing,
     cfgSources     = [],
+    cfgNameStyle   = episodeNameAnime,
     cfgSeasons     = [],
     cfgEpisodes    = [],
     cfgMatchLatest = False,

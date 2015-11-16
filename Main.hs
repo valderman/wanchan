@@ -23,7 +23,7 @@ main = shell_ $ do
   act <- parseConfig defaultConfig cmdline
   case act of
     SucceedWith s  -> echo s >> exit
-    List   cfg str -> void $ search cfg str >>= mapM_ (echo . episodeNameAnime)
+    List   cfg str -> void $ search cfg str >>= mapM_ (echo . episodeName cfg)
     Get    cfg str -> get cfg str
 
 -- | Perform an episode search using the given config and search term.
@@ -39,7 +39,7 @@ get cfg str = do
     when (null items) $ fail "no matching items to download"
 
     echo "The following items will be downloaded:"
-    mapM_ (echo . episodeNameAnime) items
+    mapM_ (echo . episodeName cfg) items
     inDirectory outdir $ parallel_ $ map download items
   where
     download ep = fetchFile (mkfn $ torrentLink ep) (torrentLink ep)
