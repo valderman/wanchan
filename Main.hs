@@ -1,15 +1,15 @@
 import Control.Shell
+import Control.Shell.Concurrent
+import Control.Shell.Download
 import Nyanbda.Config
 import Nyanbda.Filtering
 import Nyanbda.Opts
 import Nyanbda.Sources
 import Nyanbda.Types
 
--- TODO: implement download action (separate from searching)
--- TODO: dry run for download action
 -- TODO: interactive mode, allowing user to confirm/abort download
 -- TODO: option to set sink for torrents
--- TODO: implement sinks: download and external command
+-- TODO: implement sink: external command
 -- TODO: implement per series filtering; we may not want the same group for
 --       each series, etc.
 -- TODO: implement scheduler/watcher daemon
@@ -24,7 +24,8 @@ main = shell_ $ do
   case act of
     SucceedWith s  -> echo s >> exit
     List   cfg str -> void $ search cfg str
-
+    Get    cfg str -> get cfg str
+  
 
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]
@@ -34,3 +35,16 @@ search cfg str = do
     return items
   where
     handlers = map srcHandler $ cfgSources cfg
+
+-- | Print and download all episodes matching search and filters.
+get :: Config -> String -> Shell ()
+get cfg str = do
+    items <- search cfg str
+    inDirectory outdir $ do
+      parallel_ $ map download items
+  where
+    download ep = fetchFile (mkfn $ torrentLink ep) (torrentLink ep)
+    outdir = maybe "." id (cfgOutdir cfg)
+    mkfn u
+      | '?' `elem` u = reverse (takeWhile (/= '=') $ reverse u) <.> "torrent"
+      | otherwise    = takeFileName u
