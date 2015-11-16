@@ -1,6 +1,6 @@
 -- | Basic torrent source types.
 module Nyanbda.Sources.Types (Source (..), SourceOpt, SourceHandler) where
-import Control.Monad.Trans.Either
+import Control.Shell
 import System.Console.GetOpt
 import Nyanbda.Types
 
@@ -17,7 +17,7 @@ instance Show Source where
 -- | Function handling a given torrent source.
 --   A source handler accepts a search string as an argument, and returns the
 --   list of episodes returned for the given search.
-type SourceHandler = String -> EitherT String IO [Episode]
+type SourceHandler = String -> Shell [Episode]
 
 -- | A source specific option.
 type SourceOpt = (String, String, ArgDescr (Source -> Either String Source))

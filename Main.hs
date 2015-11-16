@@ -1,7 +1,4 @@
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Either
-import System.Environment
-import System.Exit
+import Control.Shell
 import Nyanbda.Config
 import Nyanbda.Filtering
 import Nyanbda.Opts
@@ -22,22 +19,18 @@ import Nyanbda.Types
 -- TODO: populate "seen" cache using episodes stored on disk
 -- TODO: config flag to clean "seen" cache
 main :: IO ()
-main = do
-  args <- getArgs
-  act <- parseConfig defaultConfig args
+main = shell_ $ do
+  act <- parseConfig defaultConfig cmdline
   case act of
-    SucceedWith s  -> putStr s >> exitSuccess
-    FailWith s     -> putStr s >> exitFailure
-    Search cfg str -> search cfg str
+    SucceedWith s  -> echo s >> exit
+    List   cfg str -> void $ search cfg str
+
 
 -- | Perform an episode search using the given config and search term.
-search :: Config -> String -> IO ()
+search :: Config -> String -> Shell [Episode]
 search cfg str = do
-    res <- runEitherT $ do
-      items <- filterEpisodes cfg . concat <$> mapM (\h -> h str) handlers
-      mapM_ (liftIO . putStrLn . episodeNameAnime) items
-    case res of
-      Left err -> putStr err >> exitFailure
-      _        -> return ()
+    items <- filterEpisodes cfg . concat <$> mapM (\h -> h str) handlers
+    mapM_ (liftIO . putStrLn . episodeNameAnime) items
+    return items
   where
     handlers = map srcHandler $ cfgSources cfg
