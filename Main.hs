@@ -23,16 +23,12 @@ main = shell_ $ do
   act <- parseConfig defaultConfig cmdline
   case act of
     SucceedWith s  -> echo s >> exit
-    List   cfg str -> void $ search cfg str
+    List   cfg str -> void $ search cfg str >>= mapM_ (echo . episodeNameAnime)
     Get    cfg str -> get cfg str
-  
 
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]
-search cfg str = do
-    items <- filterEpisodes cfg . concat <$> mapM (\h -> h str) handlers
-    mapM_ (liftIO . putStrLn . episodeNameAnime) items
-    return items
+search cfg str = filterEpisodes cfg . concat <$> mapM (\h -> h str) handlers
   where
     handlers = map srcHandler $ cfgSources cfg
 
@@ -40,8 +36,11 @@ search cfg str = do
 get :: Config -> String -> Shell ()
 get cfg str = do
     items <- search cfg str
-    inDirectory outdir $ do
-      parallel_ $ map download items
+    when (null items) $ fail "no matching items to download"
+
+    echo "The following items will be downloaded:"
+    mapM_ (echo . episodeNameAnime) items
+    inDirectory outdir $ parallel_ $ map download items
   where
     download ep = fetchFile (mkfn $ torrentLink ep) (torrentLink ep)
     outdir = maybe "." id (cfgOutdir cfg)
