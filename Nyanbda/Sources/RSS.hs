@@ -1,6 +1,5 @@
 -- | RSS 2.0 feed source.
 module Nyanbda.Sources.RSS (rssSource, rssHandler) where
-import Data.List (maximumBy)
 import Data.Maybe (catMaybes)
 import System.Console.GetOpt
 import Text.Feed.Types
@@ -47,8 +46,10 @@ rssHandler mkURLs _ = do
     urls = mkURLs []
 
     mkItem item =
-      case catMaybes [rssItemTitle item, rssItemDescription item] of
-        [] -> fail "RSS item has no title or description"
-        xs -> pure $ (maximumBy completeness (map parseEpisode xs)) {
-                  torrentLink = maybe "" id (rssItemLink item)
-                }
+        case filter (not . null) candidates of
+          []    -> fail "RSS item has no title or description"
+          (x:_) -> pure ((parseEpisode x) {
+                       torrentLink = maybe "" id (rssItemLink item)
+                     })
+      where
+        candidates = catMaybes [rssItemTitle item, rssItemDescription item]
