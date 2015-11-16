@@ -218,7 +218,9 @@ supportedSourceOpts =
     concat $ map mkSrcOpts supportedSources
   where
     mkSrcOpts s =
-      Left ("Options for " ++ srcName s) : map (mkOpt (srcName s)) (srcOpts s)
+        Left ("Options for source `" ++ srcName s ++ "'") : sopts
+      where
+        sopts = map (mkOpt (srcName s)) (srcOpts s)
     toSrcFlag (NoArg f)    = NoArg (SetSourceFlag f)
     toSrcFlag (ReqArg f s) = ReqArg (\x -> SetSourceFlag (f x)) s
     toSrcFlag (OptArg f s) = OptArg (\x -> SetSourceFlag (f x)) s
