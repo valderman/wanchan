@@ -45,8 +45,5 @@ get cfg str = do
       unless ((`elem` ["y","Y",""]) <$> ask) exit
     inDirectory outdir $ mapM_ parallel_ $ chunks 13 (map download items)
   where
-    download ep = fetchFile (mkfn $ torrentLink ep) (torrentLink ep)
+    download ep = fetchFile (episodeName cfg ep <.> "torrent") (torrentLink ep)
     outdir = maybe "." id (cfgOutdir cfg)
-    mkfn u
-      | '?' `elem` u = reverse (takeWhile (/= '=') $ reverse u) <.> "torrent"
-      | otherwise    = takeFileName u
