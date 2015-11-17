@@ -31,6 +31,14 @@ urlFromCat AllAnime     = ("http://www.nyaa.se/?page=rss&cats=1_0&term=" ++)
 urlFromCat EnglishAnime = ("http://www.nyaa.se/?page=rss&cats=1_37&term=" ++)
 urlFromCat RawAnime     = ("http://www.nyaa.se/?page=rss&cats=1_11&term=" ++)
 
+-- | Turn a Nyaa category and an offset into a Nyaa search RSS URL.
+rssUrl :: NyaaCat -> Int -> String -> String
+rssUrl cat n search
+  | n > 1     = base ++ "&offset=" ++ show n
+  | otherwise = base
+  where
+    base = urlFromCat cat search
+
 -- | Description for @--nyaa-cat@.
 nyaaCatDesc :: String
 nyaaCatDesc =
@@ -60,7 +68,8 @@ pNyaaCat = choice
 nyaaHandler :: ([NyaaCat] -> [NyaaCat]) -> SourceHandler
 nyaaHandler mkCats search = rssHandler (const urls) search
   where
+    pages = 3
     cats = mkCats []
     urls
-      | null cats = [urlFromCat EnglishAnime search]
-      | otherwise = map (flip urlFromCat search) cats
+      | null cats = [rssUrl EnglishAnime pg search | pg <- [1..pages]]
+      | otherwise = [rssUrl cat pg search | cat <- cats, pg <- [1..pages]]
