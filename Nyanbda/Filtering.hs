@@ -27,7 +27,7 @@ filterEpisodes (Config {..}) allEps
 
     seasons (Episode {..})
       | Just s <- seasonNumber  = s `elem` cfgSeasons
-      | otherwise               = False
+      | otherwise               = 1 `elem` cfgSeasons
     episodes (Episode {..})
       | Just e <- episodeNumber = e `elem` cfgEpisodes
       | otherwise               = False
