@@ -1,5 +1,8 @@
 -- | RSS 2.0 feed source.
 module Nyanbda.Sources.RSS (rssSource, rssHandler) where
+import Control.Shell
+import Control.Shell.Download
+import Control.Shell.Concurrent
 import Data.Maybe (catMaybes)
 import System.Console.GetOpt
 import Text.Feed.Types
@@ -7,8 +10,6 @@ import Text.RSS.Syntax
 import Nyanbda.Parser
 import Nyanbda.Sources.Types
 import Nyanbda.Types
-import Control.Shell
-import Control.Shell.Download
 
 rssSource :: Source
 rssSource = Source {
@@ -33,7 +34,7 @@ setRSSUrl urlstr src = do
 -- | Fetch a list of items from an RSS feed.
 rssHandler :: ([String] -> [String]) -> SourceHandler
 rssHandler mkURLs _ = do
-    concat <$> mapM getFeedItems urls
+    concat . concat <$> mapM parallel (chunks 10 (map getFeedItems urls))
   where
     getFeedItems url = do
       ef <- try $ fetchFeed url

@@ -1,6 +1,6 @@
 -- | Program configuration covering all the options.
 module Nyanbda.Config where
-import Nyanbda.Sources
+import Nyanbda.Sources.Types
 import Nyanbda.Types
 
 data Config = Config {

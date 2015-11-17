@@ -40,7 +40,7 @@ get cfg str = do
 
     echo "The following items will be downloaded:"
     mapM_ (echo . episodeName cfg) items
-    inDirectory outdir $ parallel_ $ map download items
+    inDirectory outdir $ mapM_ parallel_ $ chunks 13 (map download items)
   where
     download ep = fetchFile (mkfn $ torrentLink ep) (torrentLink ep)
     outdir = maybe "." id (cfgOutdir cfg)
