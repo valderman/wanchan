@@ -5,7 +5,7 @@ module Nyanbda.Types where
 type URL = String
 
 -- | Resolution of a video file.
-data Resolution = HD1080 | HD720 | SD480
+data Resolution = SD480 | HD720 | HD1080
   deriving (Show, Eq, Ord)
 
 data Episode = Episode {

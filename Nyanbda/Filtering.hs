@@ -53,9 +53,9 @@ chooseEpisodes = map (head . sortEpisodes) . groupEpisodes
 sortEpisodes :: [Episode] -> [Episode]
 sortEpisodes = sortBy (compareAll criteria)
   where
-    criteria = [ compBy resolution
-               , compBy releaseGroup
-               , compBy fileExtension
+    criteria = [ flip (compBy resolution)
+               , flip (compBy $ fmap (const "") . releaseGroup)
+               , flip (compBy $ fmap (const "") . fileExtension)
                ]
 
 compareAll :: [a -> a -> Ordering] -> a -> a -> Ordering
@@ -88,7 +88,8 @@ compBy f a b =
   case (f a, f b) of
     (Just x, Just y) -> x `compare` y
     (Just _, _)      -> GT
-    _                -> LT
+    (_, Just _)      -> LT
+    _                -> EQ
 
 -- | Compare two episodes for equality on the given attribute.
 eqBy :: Eq a => (Episode -> Maybe a) -> Episode -> Episode -> Bool
