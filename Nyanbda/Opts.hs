@@ -167,7 +167,7 @@ parseConfig cfg args = do
       | otherwise =
         c
 
-    (os, nonopts, errs) = getOpt RequireOrder [o | Right o <- opts] args
+    (os, nonopts, errs) = getOpt Permute [o | Right o <- opts] args
     search = unwords nonopts
     noSearchStr _ _ = fail "no search string given\n"
 
