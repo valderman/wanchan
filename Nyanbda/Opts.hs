@@ -85,7 +85,7 @@ opts =
     "Print episode names in western style: Title.SxxEyy.resolution-group."
 
   , Left "Torrent source options"
-  , Right $ Option "f" ["from"]        (ReqArg addSources "SOURCE") $
+  , Right $ Option "" ["from"]        (ReqArg addSources "SOURCE") $
     "Search only the given SOURCE. This option may be given several times " ++
     "to search multiple sources. Valid sources are " ++
     intercalate ", " supportedSourceNames ++ ". " ++
@@ -93,12 +93,17 @@ opts =
   ]
   ++ supportedSourceOpts ++
   [ Left "Misc. options"
-  , Right $ Option "h?" ["help"]       (NoArg printHelp) "Display this message."
+  , Right $ Option "i" ["interactive"] (NoArg (setInteractive True)) $
+    "Prompt the user before downloading files. " ++
+    "This is the default behavior."
+  , Right $ Option "f" ["force"]       (NoArg (setInteractive False)) $
+    "Don't prompt the user before downloading files."
   , Right $ Option "c" ["config"]      (ReqArg ReadConfig "FILE") $
     "Read the given configuration file before applying command line " ++
     "options. If this option is given multiple times, the configuration " ++
     "files will be read in order from left to right. " ++
     "By default, only ~/.config/nyanbda/nyan.conf will be read, if it exists."
+  , Right $ Option "h?" ["help"]       (NoArg printHelp) "Display this message."
   ]
 
 
@@ -322,3 +327,7 @@ animeStyle = SetFlag $ \c -> pure c {cfgNameStyle = episodeNameAnime}
 -- | Set western style name display.
 westernStyle :: Option
 westernStyle = SetFlag $ \c -> pure c {cfgNameStyle = episodeNameWestern}
+
+-- | Set the interactive flag on/off.
+setInteractive :: Bool -> Option
+setInteractive i = SetFlag $ \c -> pure c {cfgInteractive = i}

@@ -16,6 +16,9 @@ data Config = Config {
     -- | Print episode names in which style?
     cfgNameStyle   :: Episode -> String,
 
+    -- | Ask user before performing any actions other than searching?
+    cfgInteractive :: Bool,
+
     
     -- * Episode filters
     
@@ -55,6 +58,7 @@ defaultConfig = Config {
     cfgOutdir      = Nothing,
     cfgSources     = [],
     cfgNameStyle   = episodeNameAnime,
+    cfgInteractive = True,
     cfgSeasons     = [],
     cfgEpisodes    = [],
     cfgMatchLatest = False,

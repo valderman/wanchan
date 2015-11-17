@@ -7,7 +7,6 @@ import Nyanbda.Opts
 import Nyanbda.Sources
 import Nyanbda.Types
 
--- TODO: interactive mode, allowing user to confirm/abort download
 -- TODO: option to set sink for torrents
 -- TODO: implement sink: external command
 -- TODO: implement per series filtering; we may not want the same group for
@@ -39,7 +38,11 @@ get cfg str = do
     when (null items) $ fail "no matching items to download"
 
     echo "The following items will be downloaded:"
-    mapM_ (echo . episodeName cfg) items
+    mapM_ (echo . ("  " ++) . episodeName cfg) items
+
+    when (cfgInteractive cfg) $ do
+      hPutStr stdout "Do you want to continue? [Y/n] " >> hFlush stdout
+      unless ((`elem` ["y","Y",""]) <$> ask) exit
     inDirectory outdir $ mapM_ parallel_ $ chunks 13 (map download items)
   where
     download ep = fetchFile (mkfn $ torrentLink ep) (torrentLink ep)
