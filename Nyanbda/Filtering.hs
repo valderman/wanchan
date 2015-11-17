@@ -71,11 +71,13 @@ groupEpisodes :: [Episode] -> [[Episode]]
 groupEpisodes = groupBy sameEp . sortBy orderEp
   where
     orderEp = compareAll [ \a b -> seriesName a `compare` seriesName b
-                         , compBy seasonNumber
+                         , \a b -> maybe 1 id (seasonNumber a) `compare`
+                                   maybe 1 id (seasonNumber b)
                          , compBy episodeNumber
                          ]
     sameEp a b = and [ seriesName a == seriesName b
-                     , eqBy seasonNumber a b
+                     , maybe 1 id (seasonNumber a) ==
+                       maybe 1 id (seasonNumber b)
                      , eqBy episodeNumber a b
                      ]
 
