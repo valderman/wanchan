@@ -6,12 +6,15 @@ import Nyanbda.Config
 import Nyanbda.Types
 
 -- | Filter a list of episodes based on the given config.
---   TODO: latest episode filtering
 filterEpisodes :: Config -> [Episode] -> [Episode]
 filterEpisodes (Config {..}) allEps
-    | cfgAllowDupes = eps
-    | otherwise     = chooseEpisodes eps
+    | cfgMatchLatest = take 1 $ sortBy compLatest eps
+    | cfgAllowDupes  = eps
+    | otherwise      = chooseEpisodes eps
   where
+    compLatest = compareAll [ flip (compBy seasonNumber)
+                            , flip (compBy episodeNumber)
+                            , compBy resolution]
     eps = filter p allEps
     p x = all (\p' -> p' x) activeFilters
     activeFilters = catMaybes $

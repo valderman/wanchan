@@ -48,10 +48,11 @@ opts =
     "integer or a range of integers given as 'a..b'. This option may be " ++
     "given several times to specify multiple episodes."
   , Right $ Option "l" ["latest"]      (OptArg getLatest "yes/no") $
-    "Match only the latest episode of the series. If one or more " ++
-    "seasons are given, the latest episode of each season will be " ++
-    "matched. Use --latest=no to disable this criterion; the latest " ++
-    "episode(s) may still be matched by other criteria."
+    "Match only the latest episode of the series. If there is more than " ++
+    "one season of the matching series, the latest episode of the latest " ++
+    "season will be matched. " ++
+    "Use --latest=no to disable this criterion; the latest " ++
+    "episode may still be matched by other criteria."
   , Right $ Option "d" ["allow-duplicates"] (OptArg allowDupes "yes/no") $
     "Allow several copies of the same episode, but with different " ++
     "resolution, release group, etc. By default, only one of each episode " ++
