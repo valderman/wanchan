@@ -68,7 +68,7 @@ pNyaaCat = choice
 nyaaHandler :: ([NyaaCat] -> [NyaaCat]) -> SourceHandler
 nyaaHandler mkCats search = rssHandler (const urls) search
   where
-    pages = 3
+    pages = 5
     cats = mkCats []
     urls
       | null cats = [rssUrl EnglishAnime pg search | pg <- [1..pages]]
