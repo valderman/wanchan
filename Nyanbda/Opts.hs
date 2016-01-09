@@ -384,16 +384,16 @@ parseExec cmd p ep =
   where
     (first : parts) = split '%' cmd
     subst ("":xs)      = "%" : subst xs
-    subst (('f':s):xs) = p : s : subst xs
+    subst (('f':s):xs) = "\"" : p : "\"" : s : subst xs
     subst (('u':s):xs) = torrentLink ep : s : subst xs
-    subst (('n':s):xs) = seriesName ep : s : subst xs
+    subst (('n':s):xs) = "\"" : seriesName ep : "\"" : s : subst xs
     subst (('e':s):xs) = show (episodeNumber ep) : s : subst xs
     subst (('s':s):xs) = show (seasonNumber ep) : s : subst xs
-    subst (('g':s):xs) = maybe "" id (releaseGroup ep) : s : subst xs
+    subst (('g':s):xs) = "\"" : maybe "" id (releaseGroup ep) : "\"":s:subst xs
     subst (('r':s):xs) = show (resolution ep) : s : subst xs
     subst (('t':s):xs) = maybe "" id (fileExtension ep) : s : subst xs
-    subst (('a':s):xs) = episodeNameAnime ep : s : subst xs
-    subst (('w':s):xs) = episodeNameWestern ep : s : subst xs
+    subst (('a':s):xs) = "\"" : episodeNameAnime ep : "\"" : s : subst xs
+    subst (('w':s):xs) = "\"" : episodeNameWestern ep : "\"" : s : subst xs
     subst (x:xs)       = "%" : x : subst xs
     subst _            = []
 
