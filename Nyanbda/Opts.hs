@@ -17,6 +17,7 @@ data Action
   | List        Config String
   | Get         Config String
   | Batch       Config String
+  | Daemon      Int Config String
 
 -- | An option set by a config file or on the command line.
 data Option
@@ -29,6 +30,9 @@ data Option
 opts :: [Either String (OptDescr Option)]
 opts =
   [ Left "Actions"
+  , Right $ Option "A" ["daemon"]      (ReqArg setDaemon "MINS") $
+    "Daemon mode: this mode is equivalent to batch mode, re-run " ++
+    "every MINS minutes. Implies `--force'."
   , Right $ Option "B" ["batch"]       (NoArg (setAction Batch)) $
     "Run in batch mode: all command line arguments are interpreted as " ++
     "files containing one `search specifications' per line." ++
@@ -206,7 +210,7 @@ parseConfig cfg args = do
 
     (os, nonopts, errs) = getOpt Permute [o | Right o <- opts] args
     search = unwords nonopts
-    noSearchStr _ _ = fail "no search string given\n"
+    noSearchStr _ _ = fail "no search string/batch files given\n"
 
     findAction _   (SetAction act : _) c s = pure (act c s)
     findAction def (_:xs) c s              = findAction def xs c s
@@ -356,6 +360,10 @@ addSources src = SetFlag $ \c -> do
 -- | Set the output directory.
 setOutdir :: FilePath -> Option
 setOutdir dir = SetFlag $ \c -> pure c {cfgOutdir = Just dir}
+
+-- | Run in daemon mode.
+setDaemon :: String -> Option
+setDaemon t = setAction (Daemon (read t))
 
 -- | Set command to execute for each episode.
 setExec :: String -> Option
