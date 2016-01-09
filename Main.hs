@@ -13,11 +13,7 @@ import Nyanbda.Parser (parseEpisode)
 -- TODO: implement per series filtering; we may not want the same group for
 --       each series, etc.
 -- TODO: implement scheduler/watcher daemon
--- TODO: implement "seen" functionality, to avoid downloading previously seen
---       episodes
--- TODO: config flag to force download of seen episodes
 -- TODO: populate "seen" cache using episodes stored on disk
--- TODO: config flag to clean "seen" cache
 main :: IO ()
 main = shell_ $ do
   act <- parseConfig defaultConfig cmdline
