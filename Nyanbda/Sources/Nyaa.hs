@@ -1,5 +1,8 @@
 -- | NyaaTorrents torrent source.
 module Nyanbda.Sources.Nyaa (nyaaSource) where
+import Data.Bits
+import Data.Char
+import Data.Word (Word8)
 import System.Console.GetOpt
 import Text.Parsec
 import Text.Parsec.String
@@ -24,6 +27,47 @@ data NyaaCat
   | All
     deriving (Eq, Show)
 
+-- | Borrowed from @HTTP@ to avoid having to pull in the entire package.
+urlEncode :: String -> String
+urlEncode     [] = []
+urlEncode (ch:t) 
+  | (isAscii ch && isAlphaNum ch) || ch `elem` "-_.~" = ch : urlEncode t
+  | not (isAscii ch) = foldr escape (urlEncode t) (encodeChar ch)
+  | otherwise = escape (fromIntegral (fromEnum ch)) (urlEncode t)
+    where
+     escape b rs = '%':showH (b `div` 16) (showH (b `mod` 16) rs)
+
+     showH :: Word8 -> String -> String
+     showH x xs
+       | x <= 9    = to (o_0 + x) : xs
+       | otherwise = to (o_A + (x-10)) : xs
+      where
+       to  = toEnum  .  fromIntegral
+       fro = fromIntegral . fromEnum
+
+       o_0 = fro '0'
+       o_A = fro 'A'
+
+encodeChar :: Char -> [Word8]
+encodeChar = map fromIntegral . go . ord
+ where
+  go oc
+   | oc <= 0x7f       = [oc]
+
+   | oc <= 0x7ff      = [ 0xc0 + (oc `shiftR` 6)
+                        , 0x80 + oc .&. 0x3f
+                        ]
+
+   | oc <= 0xffff     = [ 0xe0 + (oc `shiftR` 12)
+                        , 0x80 + ((oc `shiftR` 6) .&. 0x3f)
+                        , 0x80 + oc .&. 0x3f
+                        ]
+   | otherwise        = [ 0xf0 + (oc `shiftR` 18)
+                        , 0x80 + ((oc `shiftR` 12) .&. 0x3f)
+                        , 0x80 + ((oc `shiftR` 6) .&. 0x3f)
+                        , 0x80 + oc .&. 0x3f
+                        ]
+
 -- | Turn a Nyaa category into a Nyaa search RSS URL.
 urlFromCat :: NyaaCat -> String -> String
 urlFromCat All          = ("http://www.nyaa.se/?page=rss&term=" ++)
@@ -37,7 +81,7 @@ rssUrl cat n search
   | n > 1     = base ++ "&offset=" ++ show n
   | otherwise = base
   where
-    base = urlFromCat cat search
+    base = urlFromCat cat (urlEncode search)
 
 -- | Description for @--nyaa-cat@.
 nyaaCatDesc :: String
