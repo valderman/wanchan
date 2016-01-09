@@ -16,6 +16,7 @@ data Action
   = SucceedWith String
   | List        Config String
   | Get         Config String
+  | Batch       Config String
 
 -- | An option set by a config file or on the command line.
 data Option
@@ -28,8 +29,17 @@ data Option
 opts :: [Either String (OptDescr Option)]
 opts =
   [ Left "Actions"
+  , Right $ Option "B" ["batch"]       (NoArg (setAction Batch)) $
+    "Run in batch mode: all command line arguments are interpreted as " ++
+    "files containing one `search specifications' per line." ++
+    "A search specification consists of all command line filtering options " ++
+    "and non-option arguments. The following search specification would " ++
+    "match all HorribleSubs releases of the third season of YuruYuri:\n  " ++
+    "yuruyuri -s3 -gHorribleSubs\n" ++
+    "Any filtering options passed on the command line are used as default " ++
+    "overridden by batch files."
   , Right $ Option "D" ["dry-run"]     (NoArg (setAction List)) $
-    "List all torrents matching that would be downloaded by --get. " ++
+    "List all actions that would be performed by --get. " ++
     "This is the default action."
   , Right $ Option "G" ["get"]         (NoArg (setAction Get)) $
     "Download all torrents matching the given search string and filters, " ++

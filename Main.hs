@@ -16,12 +16,16 @@ import Nyanbda.Parser (parseEpisode)
 -- TODO: implement scheduler/watcher daemon
 -- TODO: populate "seen" cache using episodes stored on disk
 main :: IO ()
-main = shell_ $ do
-  act <- parseConfig defaultConfig cmdline
+main = shell_ $ runMain defaultConfig cmdline
+
+runMain :: Config -> [String] -> Shell ()
+runMain defconfig cmd = do
+  act <- parseConfig defconfig cmd
   case act of
     SucceedWith s  -> echo s >> exit
     List   cfg str -> get True cfg str
     Get    cfg str -> get False cfg str
+    Batch  cfg str -> batch cfg (words str)
 
 -- | Read the `seen' file, if any.
 readSeenEpisodes :: Maybe FilePath -> Shell [Episode]
@@ -34,6 +38,23 @@ readSeenEpisodes (Just f) = do
     else return []
 readSeenEpisodes _ = do
   return []
+
+-- | Run a list of searches in batch mode.
+batch :: Config -> [FilePath] -> Shell ()
+batch cfg files = do
+    when (cfgInteractive cfg) $ do
+      go True
+      hPutStr stdout "Do you want to continue? [Y/n] " >> hFlush stdout
+      unless ((`elem` ["y","Y",""]) <$> ask) exit
+    go False
+  where
+    mkOpts True line  = words line ++ ["--dry-run"]
+    mkOpts False line = words line ++ ["--get", "--force"]
+    go dryrun = do
+      forM_ files $ \file -> do
+        lns <- lines <$> input file
+        forM_ lns $ \line -> do
+          runMain cfg (mkOpts dryrun line)
 
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]
