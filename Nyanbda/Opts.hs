@@ -34,8 +34,8 @@ opts =
     "files containing one `search specifications' per line." ++
     "A search specification consists of all command line filtering options " ++
     "and non-option arguments. The following search specification would " ++
-    "match all HorribleSubs releases of the third season of YuruYuri:\n  " ++
-    "yuruyuri -s3 -gHorribleSubs\n" ++
+    "match all HorribleSubs releases of the third season of YuruYuri:" ++
+    "\n\n    yuruyuri -s3 -gHorribleSubs\n\n" ++
     "Any filtering options passed on the command line are used as default " ++
     "overridden by batch files."
   , Right $ Option "D" ["dry-run"]     (NoArg (setAction List)) $
@@ -91,18 +91,18 @@ opts =
   , Right $ Option "x" ["exec"]        (ReqArg setExec "CMD") $
     "Execute CMD for each matching episode, where CMD is a shell " ++
     "command. Subsitution is performed on the following format strings in " ++
-    "CMD:\n" ++ unlines
-      [ "%f  Local path to torrent file; only valid with `--get'."
-      , "%u  Torrent URL"
-      , "%n  Series name"
-      , "%e  Episode number"
-      , "%s  Season number"
-      , "%g  Release group"
-      , "%r  Resolution"
-      , "%t  File type"
-      , "%a  Anime style episode name"
-      , "%w  Western style episode name"
-      , "%%  A literal `%' character"
+    "CMD:\n\n" ++ unlines
+      [ "    %f  Local path to torrent file; only valid with `--get'."
+      , "    %u  Torrent URL"
+      , "    %n  Series name"
+      , "    %e  Episode number"
+      , "    %s  Season number"
+      , "    %g  Release group"
+      , "    %r  Resolution"
+      , "    %t  File type"
+      , "    %a  Anime style episode name"
+      , "    %w  Western style episode name"
+      , "    %%  A literal `%' character"
       ]
   , Right $ Option "n" ["anime-style"]     (NoArg animeStyle) $
     "Print episode names in anime style: [Group] Title Sx - yy [resolution]."++
@@ -149,7 +149,12 @@ helpString :: Either String (OptDescr a) -> String
 helpString (Left subheading) =
     subheading ++ "\n"
 helpString (Right (Option short long opt help)) =
-    shorts ++ longs ++ "\n" ++ formatHelpMessage 80 help
+    concat
+      [ shorts
+      , longs
+      , "\n"
+      , concat (map (formatHelpMessage 80) (lines help))
+      ]
   where
     (longarg, shortarg) =
       case opt of
@@ -168,7 +173,7 @@ helpString (Right (Option short long opt help)) =
 -- | Break lines at n chars, add two spaces before each.
 formatHelpMessage :: Int -> String -> String
 formatHelpMessage chars help =
-    unlines . map ("    " ++) . breakLines 0 [] $ words help
+    unlines . map ("    " ++) . breakLines 0 [] $ words' help
   where
     breakLines len ln (w:ws)
       | length w >= chars-4     = w:unwords (reverse ln):breakLines 0 [] ws
@@ -176,6 +181,12 @@ formatHelpMessage chars help =
       | otherwise               = breakLines (len+1+length w) (w:ln) ws
     breakLines _ ln _ =
       [unwords $ reverse ln]
+
+words' :: String -> [String]
+words' "" = []
+words' s
+  | (xs, ' ':ys) <- break (== ' ') s = xs : words' ys
+  | otherwise                        = [s]
 
 -- | Create a configuration from a list of command line arguments and a default
 --   config.
