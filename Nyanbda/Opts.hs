@@ -98,11 +98,11 @@ opts =
     "This is the default behavior."
   , Right $ Option "f" ["force"]       (NoArg (setInteractive False)) $
     "Don't prompt the user before downloading files."
-  , Right $ Option "c" ["config"]      (ReqArg ReadConfig "FILE") $
-    "Read the given configuration file before applying command line " ++
-    "options. If this option is given multiple times, the configuration " ++
-    "files will be read in order from left to right. " ++
-    "By default, only ~/.config/nyanbda/nyan.conf will be read, if it exists."
+  , Right $ Option ""  ["seen"]        (ReqArg setSeenFile "FILE") $
+    "Use FILE as this sessions `seen' file. Episodes present in FILE " ++
+    "will be considered already seen, and thus not included in search " ++
+    "results. Any episodes downloaded as a result of a invocation " ++
+    "using this option will be appended to FILE as well."
   , Right $ Option "h?" ["help"]       (NoArg printHelp) "Display this message."
   ]
 
@@ -319,6 +319,10 @@ addSources src = SetFlag $ \c -> do
 -- | Set the output directory.
 setOutdir :: FilePath -> Option
 setOutdir dir = SetFlag $ \c -> pure c {cfgOutdir = Just dir}
+
+-- | Set the @seen@ file.
+setSeenFile :: FilePath -> Option
+setSeenFile file = SetFlag $ \c -> pure c {cfgSeenFile = Just file}
 
 -- | Set anime style name display.
 animeStyle :: Option

@@ -10,6 +10,10 @@ data Config = Config {
     --   directory is used.
     cfgOutdir      :: Maybe FilePath,
 
+    -- | List of already seen episodes for this invocation. Episodes in this
+    --   file will not be considered for downloading.
+    cfgSeenFile    :: Maybe FilePath,
+    
     -- | Sources to search.
     cfgSources     :: [Source],
 
@@ -56,6 +60,7 @@ episodeName = cfgNameStyle
 defaultConfig :: Config
 defaultConfig = Config {
     cfgOutdir      = Nothing,
+    cfgSeenFile    = Nothing,
     cfgSources     = [],
     cfgNameStyle   = episodeNameAnime,
     cfgInteractive = True,

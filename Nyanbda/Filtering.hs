@@ -1,11 +1,34 @@
 {-# LANGUAGE RecordWildCards #-}
-module Nyanbda.Filtering (filterEpisodes) where
+module Nyanbda.Filtering (filterEpisodes, filterSeen) where
 import Data.List
 import Data.Maybe
 import Nyanbda.Config
 import Nyanbda.Types
 
--- | Filter a list of episodes based on the given config.
+-- | Remove all episodes that were already seen. Does not preserve the order
+--   of the remaining episodes in the list.
+filterSeen :: [Episode] -- ^ List of already seen episodes.
+           -> [Episode] -- ^ List of episodes to filter.
+           -> [Episode]
+filterSeen seen = flip (unorderedMinusBy orderEp) seen
+
+-- | Like @\\@, but does not preserve the ordering of the resulting list.
+--   Also removes every occurrences of [y <- ys] from xs, not just the first.
+--   For instance, @unorderedMinusBy compare [x,x] [x] == []@.
+unorderedMinusBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
+unorderedMinusBy cmp as bs = go (sortBy cmp as) (sortBy cmp bs)
+  where
+    go xxs@(x:xs) yys@(y:ys) =
+      case cmp x y of
+        LT -> x : go xs yys
+        GT -> go xxs ys
+        EQ -> go xs yys
+    go xs _ =
+      xs
+
+-- | Filter a list of episodes based on the episode filters in the given
+--   config. The given list of episodes is assumed to only contain unseen
+--   episodes, so no filtering based on the seen file is performed here.
 filterEpisodes :: Config -> [Episode] -> [Episode]
 filterEpisodes (Config {..}) allEps
     | cfgMatchLatest = take 1 $ sortBy compLatest eps
@@ -69,17 +92,20 @@ compareAll _ _ _ =
 -- | Group episodes by season and episode number.
 groupEpisodes :: [Episode] -> [[Episode]]
 groupEpisodes = groupBy sameEp . sortBy orderEp
-  where
-    orderEp = compareAll [ \a b -> seriesName a `compare` seriesName b
-                         , \a b -> maybe 1 id (seasonNumber a) `compare`
-                                   maybe 1 id (seasonNumber b)
-                         , compBy episodeNumber
-                         ]
-    sameEp a b = and [ seriesName a == seriesName b
-                     , maybe 1 id (seasonNumber a) ==
-                       maybe 1 id (seasonNumber b)
-                     , eqBy episodeNumber a b
+
+orderEp :: Episode -> Episode -> Ordering
+orderEp = compareAll [ \a b -> seriesName a `compare` seriesName b
+                     , \a b -> maybe 1 id (seasonNumber a) `compare`
+                               maybe 1 id (seasonNumber b)
+                     , compBy episodeNumber
                      ]
+
+sameEp :: Episode -> Episode -> Bool
+sameEp a b = and [ seriesName a == seriesName b
+                 , maybe 1 id (seasonNumber a) ==
+                   maybe 1 id (seasonNumber b)
+                 , eqBy episodeNumber a b
+                 ]
 
 -- | Compare two episodes on the given attribute. A missing attribute is
 --   considered "less" than a present one.

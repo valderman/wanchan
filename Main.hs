@@ -6,6 +6,7 @@ import Nyanbda.Filtering
 import Nyanbda.Opts
 import Nyanbda.Sources
 import Nyanbda.Types
+import Nyanbda.Parser (parseEpisode)
 
 -- TODO: option to set sink for torrents
 -- TODO: implement sink: external command
@@ -25,9 +26,23 @@ main = shell_ $ do
     List   cfg str -> void $ search cfg str >>= mapM_ (echo . episodeName cfg)
     Get    cfg str -> get cfg str
 
+readSeenEpisodes :: Maybe FilePath -> Shell [Episode]
+readSeenEpisodes (Just f) = do
+  isf <- isFile f
+  if isf
+    then withFile f ReadMode $ \h -> do
+      seen <- map parseEpisode . lines <$> hGetContents h
+      length seen `seq` return seen
+    else return []
+readSeenEpisodes _ = do
+  return []
+
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]
-search cfg str = filterEpisodes cfg . concat <$> mapM (\h -> h str) handlers
+search cfg str = do
+    eps <- mapM (\h -> h str) handlers
+    seen <- readSeenEpisodes (cfgSeenFile cfg)
+    return . filterEpisodes cfg . filterSeen seen . concat $ eps
   where
     handlers = map srcHandler $ cfgSources cfg
 
@@ -44,6 +59,9 @@ get cfg str = do
       hPutStr stdout "Do you want to continue? [Y/n] " >> hFlush stdout
       unless ((`elem` ["y","Y",""]) <$> ask) exit
     inDirectory outdir $ mapM_ parallel_ $ chunks 13 (map download items)
+    case cfgSeenFile cfg of
+      Just f -> liftIO $ appendFile f (unlines $ map (episodeName cfg) items)
+      _      -> return ()
   where
     download ep = fetchFile (episodeName cfg ep <.> "torrent") (torrentLink ep)
     outdir = maybe "." id (cfgOutdir cfg)
