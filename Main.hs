@@ -10,7 +10,6 @@ import Nyanbda.Types
 import Nyanbda.Parser (parseEpisode)
 
 -- TODO: option to set sink for torrents
--- TODO: implement sink: external command
 -- TODO: implement per series filtering; we may not want the same group for
 --       each series, etc.
 -- TODO: implement scheduler/watcher daemon
