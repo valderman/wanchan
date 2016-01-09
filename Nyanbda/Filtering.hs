@@ -70,13 +70,27 @@ filterEpisodes (Config {..}) allEps
 
 -- | Choose one instance of each season/episode number pair.
 chooseEpisodes :: [Episode] -> [Episode]
-chooseEpisodes = map (head . sortEpisodes) . groupEpisodes
+chooseEpisodes eps = map (head . sortEpisodes presenceRank) epGroups
+  where
+    -- Presence rank: the number of episode groups that contains episodes
+    -- with the exact same metadata (group, resolution and extension)
+    presenceRank e = length [() | g <- epGroups, any (sameMeta e) g]
+
+    -- Episodes grouped by season and episode number
+    epGroups = groupEpisodes eps
+
+    sameMeta = eqAll
+      [ eqBy resolution
+      , eqBy releaseGroup
+      , eqBy fileExtension
+      ]
 
 -- | Sort a list of episodes based on their "desirability".
-sortEpisodes :: [Episode] -> [Episode]
-sortEpisodes = sortBy (compareAll criteria)
+sortEpisodes :: (Episode -> Int) -> [Episode] -> [Episode]
+sortEpisodes presenceRank = sortBy (compareAll criteria)
   where
-    criteria = [ flip (compBy resolution)
+    criteria = [ \a b -> presenceRank b `compare` presenceRank a
+               , flip (compBy resolution)
                , flip (compBy $ fmap (const "") . releaseGroup)
                , flip (compBy $ fmap (const "") . fileExtension)
                ]
@@ -88,6 +102,12 @@ compareAll (cmp : xs) a b =
     ord -> ord
 compareAll _ _ _ =
   EQ
+
+eqAll :: [a -> a -> Bool] -> a -> a -> Bool
+eqAll (cmp : xs) a b
+  | a `cmp` b = eqAll xs a b
+  | otherwise = False
+eqAll _ _ _   = True
 
 -- | Group episodes by season and episode number.
 groupEpisodes :: [Episode] -> [[Episode]]
