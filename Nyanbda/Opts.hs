@@ -78,6 +78,22 @@ opts =
     "Download the corresponding torrent file for each matched episode to " ++
     "the given DIRectory. If no DIR is given, the current working " ++
     "directory is used."
+  , Right $ Option "x" ["exec"]        (ReqArg setExec "CMD") $
+    "Execute CMD for each matching episode, where CMD is a shell " ++
+    "command. Subsitution is performed on the following format strings in " ++
+    "CMD:\n" ++ unlines
+      [ "%f  Local path to torrent file; only valid with `--get'."
+      , "%u  Torrent URL"
+      , "%n  Series name"
+      , "%e  Episode number"
+      , "%s  Season number"
+      , "%g  Release group"
+      , "%r  Resolution"
+      , "%t  File type"
+      , "%a  Anime style episode name"
+      , "%w  Western style episode name"
+      , "%%  A literal `%' character"
+      ]
   , Right $ Option "n" ["anime-style"]     (NoArg animeStyle) $
     "Print episode names in anime style: [Group] Title Sx - yy [resolution]."++
     " This is the default."
@@ -319,6 +335,38 @@ addSources src = SetFlag $ \c -> do
 -- | Set the output directory.
 setOutdir :: FilePath -> Option
 setOutdir dir = SetFlag $ \c -> pure c {cfgOutdir = Just dir}
+
+-- | Set command to execute for each episode.
+setExec :: String -> Option
+setExec cmd = SetFlag $ \c -> pure c {cfgExec = Just $ parseExec cmd}
+
+split :: Char -> String -> [String]
+split c = go ""
+  where
+    go acc (x:xs)
+      | x == c    = reverse acc : go "" xs
+      | otherwise = go (x:acc) xs
+    go [] _       = []
+    go acc _      = [reverse acc]
+
+parseExec :: String -> FilePath -> Episode -> String
+parseExec cmd p ep =
+    concat $ first : subst parts
+  where
+    (first : parts) = split '%' cmd
+    subst ("":xs)      = "%" : subst xs
+    subst (('f':s):xs) = p : s : subst xs
+    subst (('u':s):xs) = torrentLink ep : s : subst xs
+    subst (('n':s):xs) = seriesName ep : s : subst xs
+    subst (('e':s):xs) = show (episodeNumber ep) : s : subst xs
+    subst (('s':s):xs) = show (seasonNumber ep) : s : subst xs
+    subst (('g':s):xs) = maybe "" id (releaseGroup ep) : s : subst xs
+    subst (('r':s):xs) = show (resolution ep) : s : subst xs
+    subst (('t':s):xs) = maybe "" id (fileExtension ep) : s : subst xs
+    subst (('a':s):xs) = episodeNameAnime ep : s : subst xs
+    subst (('w':s):xs) = episodeNameWestern ep : s : subst xs
+    subst (x:xs)       = "%" : x : subst xs
+    subst _            = []
 
 -- | Set the @seen@ file.
 setSeenFile :: FilePath -> Option

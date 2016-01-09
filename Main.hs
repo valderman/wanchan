@@ -1,6 +1,7 @@
 import Control.Shell
 import Control.Shell.Concurrent
 import Control.Shell.Download
+import System.Process (system)
 import Nyanbda.Config
 import Nyanbda.Filtering
 import Nyanbda.Opts
@@ -19,9 +20,10 @@ main = shell_ $ do
   act <- parseConfig defaultConfig cmdline
   case act of
     SucceedWith s  -> echo s >> exit
-    List   cfg str -> void $ search cfg str >>= mapM_ (echo . episodeName cfg)
-    Get    cfg str -> get cfg str
+    List   cfg str -> get True cfg str
+    Get    cfg str -> get False cfg str
 
+-- | Read the `seen' file, if any.
 readSeenEpisodes :: Maybe FilePath -> Shell [Episode]
 readSeenEpisodes (Just f) = do
   isf <- isFile f
@@ -43,21 +45,40 @@ search cfg str = do
     handlers = map srcHandler $ cfgSources cfg
 
 -- | Print and download all episodes matching search and filters.
-get :: Config -> String -> Shell ()
-get cfg str = do
+get :: Bool -> Config -> String -> Shell ()
+get dryrun cfg str = do
     items <- search cfg str
     when (null items) $ fail "no matching items to download"
 
-    echo "The following items will be downloaded:"
+    if dryrun
+      then echo "The following items would be downloaded:"
+      else echo "The following items will be downloaded:"
     mapM_ (echo . ("  " ++) . episodeName cfg) items
 
-    when (cfgInteractive cfg) $ do
-      hPutStr stdout "Do you want to continue? [Y/n] " >> hFlush stdout
-      unless ((`elem` ["y","Y",""]) <$> ask) exit
-    inDirectory outdir $ mapM_ parallel_ $ chunks 13 (map download items)
-    case cfgSeenFile cfg of
-      Just f -> liftIO $ appendFile f (unlines $ map (episodeName cfg) items)
-      _      -> return ()
+    let cmds = case cfgExec cfg of
+          Just cmd -> map (\ep -> cmd (mkFileName ep) ep) items
+          _        -> []
+
+    when (dryrun && not (null cmds)) $ do
+      echo "Then the following commands would be executed:"
+      mapM_ (echo . ("  " ++)) cmds
+
+    unless dryrun $ do
+      when (cfgInteractive cfg) $ do
+        hPutStr stdout "Do you want to continue? [Y/n] " >> hFlush stdout
+        unless ((`elem` ["y","Y",""]) <$> ask) exit
+
+      -- Download torrents in batches of 13
+      mapM_ parallel_ $ chunks 13 (map download items)
+
+      -- Execute per torrent command, if applicable
+      mapM_ (liftIO . system) cmds
+
+      -- Save to seen file, if applicable
+      case cfgSeenFile cfg of
+        Just f -> liftIO $ appendFile f (unlines $ map (episodeName cfg) items)
+        _      -> return ()
   where
-    download ep = fetchFile (episodeName cfg ep <.> "torrent") (torrentLink ep)
+    mkFileName ep = outdir </> episodeName cfg ep <.> "torrent"
+    download ep = fetchFile (mkFileName ep) (torrentLink ep)
     outdir = maybe "." id (cfgOutdir cfg)

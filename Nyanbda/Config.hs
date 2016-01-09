@@ -23,6 +23,9 @@ data Config = Config {
     -- | Ask user before performing any actions other than searching?
     cfgInteractive :: Bool,
 
+    -- | Execute this shell command for each downloaded torrent.
+    cfgExec :: Maybe (FilePath -> Episode -> String),
+
     
     -- * Episode filters
     
@@ -64,6 +67,7 @@ defaultConfig = Config {
     cfgSources     = [],
     cfgNameStyle   = episodeNameAnime,
     cfgInteractive = True,
+    cfgExec        = Nothing,
     cfgSeasons     = [],
     cfgEpisodes    = [],
     cfgMatchLatest = False,
