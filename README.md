@@ -1,5 +1,5 @@
-nyanbda: A sort of flexible Nyaa Torrents downloader
-====================================================
+A sort of flexible Nyaa Torrents client
+=======================================
 
 Nyanbda is a command line Nyaa Torrents client specifically geared towards
 downloading and watching anime series. It has the following features:
