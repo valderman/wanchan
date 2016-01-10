@@ -97,7 +97,7 @@ following contents:
 
 Then we call nyanbda with the `--batch` option, leaving out the filters:
 
-    $ nyanbda --batch batch.txt --get -o./torrents -x'rtorrent %f'
+    $ nyanbda --batch batch.txt -o./torrents -x'rtorrent %f'
 
 This will download the first season of Assassination Classroom in 480p, and the
 third season of YuruYuri in 1080p to the `torrents` subdirectory, and
@@ -106,7 +106,7 @@ then run the `rtorrent` command on each downloaded torrent file.
 Finally, you can also set nyanbda to watch Nyaa for new episodes for you using
 daemon mode:
 
-    $ nyanbda --daemon=60 batch.txt --get -o./torrents -x'rtorrent %f'
+    $ nyanbda --daemon=60 batch.txt -o./torrents -x'rtorrent %f'
 
 This will cause nyanbda to go into batch mode using the specified file every 60
 minutes, as specified by the `60` passed to the `--daemon` option.
@@ -115,7 +115,7 @@ However, this will re-download *all* episodes of the series given in
 To avoid this, we can use a "seen" file: a file which records the episodes
 nyanbda has already downloaded.
 
-    $ nyanbda --daemon=60 batch.txt --get -o./torrents -x'rtorrent %f' --seen=seen.txt
+    $ nyanbda --daemon=60 batch.txt -o./torrents -x'rtorrent %f' --seen=seen.txt
 
 
 This will use the file `seen.txt` to record episode titles as they are
