@@ -9,6 +9,7 @@ import Text.Parsec.String
 import Nyanbda.Parser
 import Nyanbda.Sources.RSS
 import Nyanbda.Sources.Types
+import Nyanbda.Types (Episode (..))
 
 -- | NyaaTorrents episode source. If no category is given, @anime-english@ is
 --   assumed.
@@ -110,10 +111,16 @@ pNyaaCat = choice
 
 -- | Actual NyaaTorrents handler.
 nyaaHandler :: ([NyaaCat] -> [NyaaCat]) -> SourceHandler
-nyaaHandler mkCats search = rssHandler (const urls) search
+nyaaHandler mkCats search = map unHttps <$> rssHandler (const urls) search
   where
     pages = 5
     cats = mkCats []
     urls
       | null cats = [rssUrl EnglishAnime pg search | pg <- [1..pages]]
       | otherwise = [rssUrl cat pg search | cat <- cats, pg <- [1..pages]]
+
+unHttps :: Episode -> Episode
+unHttps e = e {torrentLink = unHttpsUrl (torrentLink e)}
+  where unHttpsUrl u
+          | take 5 u == "https" = "http" ++ drop 5 u
+          | otherwise           = u

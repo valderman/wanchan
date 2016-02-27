@@ -69,7 +69,7 @@ batch cfg files = do
     go dryrun = do
       forM_ files $ \file -> do
         lns <- lines <$> input file
-        forM_ lns $ \line -> do
+        parallel_ $ flip map lns $ \line -> do
           void . try $ runMain cfg (mkOpts dryrun line)
 
 -- | Perform an episode search using the given config and search term.
