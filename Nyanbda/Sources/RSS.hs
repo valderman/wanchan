@@ -10,6 +10,8 @@ import Text.RSS.Syntax
 import Nyanbda.Parser
 import Nyanbda.Sources.Types
 import Nyanbda.Types
+import Data.ByteString.Char8 (pack)
+import Data.ByteString.UTF8 (toString)
 
 rssSource :: Source
 rssSource = Source {
@@ -49,8 +51,10 @@ rssHandler mkURLs _ = do
     mkItem item =
         case filter (not . null) candidates of
           []    -> fail "RSS item has no title or description"
-          (x:_) -> pure ((parseEpisode x) {
+          (x:_) -> pure ((parseEpisode $ utf8Fix x) {
                        torrentLink = maybe "" id (rssItemLink item)
                      })
       where
         candidates = catMaybes [rssItemTitle item, rssItemDescription item]
+        -- feed library messes up UTF8, we need to fix it before parsing
+        utf8Fix = toString . pack
