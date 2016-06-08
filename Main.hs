@@ -60,7 +60,7 @@ batch :: Config -> [FilePath] -> Shell ()
 batch cfg files = do
     when (cfgInteractive cfg) $ do
       go True
-      hPutStr stdout "Do you want to continue? [Y/n] " >> hFlush stdout
+      echo_ "Do you want to continue? [Y/n] "
       unless ((`elem` ["y","Y",""]) <$> ask) exit
     go False
   where
@@ -102,7 +102,7 @@ get dryrun cfg str = do
 
     unless dryrun $ do
       when (cfgInteractive cfg) $ do
-        hPutStr stdout "Do you want to continue? [Y/n] " >> hFlush stdout
+        echo_ "Do you want to continue? [Y/n] "
         unless ((`elem` ["y","Y",""]) <$> ask) exit
 
       -- Download torrents in batches of 13
