@@ -71,10 +71,10 @@ encodeChar = map fromIntegral . go . ord
 
 -- | Turn a Nyaa category into a Nyaa search RSS URL.
 urlFromCat :: NyaaCat -> String -> String
-urlFromCat All          = ("http://www.nyaa.se/?page=rss&term=" ++)
-urlFromCat AllAnime     = ("http://www.nyaa.se/?page=rss&cats=1_0&term=" ++)
-urlFromCat EnglishAnime = ("http://www.nyaa.se/?page=rss&cats=1_37&term=" ++)
-urlFromCat RawAnime     = ("http://www.nyaa.se/?page=rss&cats=1_11&term=" ++)
+urlFromCat All          = ("https://www.nyaa.se/?page=rss&term=" ++)
+urlFromCat AllAnime     = ("https://www.nyaa.se/?page=rss&cats=1_0&term=" ++)
+urlFromCat EnglishAnime = ("https://www.nyaa.se/?page=rss&cats=1_37&term=" ++)
+urlFromCat RawAnime     = ("https://www.nyaa.se/?page=rss&cats=1_11&term=" ++)
 
 -- | Turn a Nyaa category and an offset into a Nyaa search RSS URL.
 rssUrl :: NyaaCat -> Int -> String -> String
@@ -111,16 +111,10 @@ pNyaaCat = choice
 
 -- | Actual NyaaTorrents handler.
 nyaaHandler :: ([NyaaCat] -> [NyaaCat]) -> SourceHandler
-nyaaHandler mkCats search = map unHttps <$> rssHandler (const urls) search
+nyaaHandler mkCats search = rssHandler (const urls) search
   where
     pages = 5
     cats = mkCats []
     urls
       | null cats = [rssUrl EnglishAnime pg search | pg <- [1..pages]]
       | otherwise = [rssUrl cat pg search | cat <- cats, pg <- [1..pages]]
-
-unHttps :: Episode -> Episode
-unHttps e = e {torrentLink = unHttpsUrl (torrentLink e)}
-  where unHttpsUrl u
-          | take 5 u == "https" = "http" ++ drop 5 u
-          | otherwise           = u

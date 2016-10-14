@@ -51,10 +51,8 @@ rssHandler mkURLs _ = do
     mkItem item =
         case filter (not . null) candidates of
           []    -> fail "RSS item has no title or description"
-          (x:_) -> pure ((parseEpisode $ utf8Fix x) {
+          (x:_) -> pure ((parseEpisode x) {
                        torrentLink = maybe "" id (rssItemLink item)
                      })
       where
         candidates = catMaybes [rssItemTitle item, rssItemDescription item]
-        -- feed library messes up UTF8, we need to fix it before parsing
-        utf8Fix = toString . pack
