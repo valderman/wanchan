@@ -71,15 +71,15 @@ encodeChar = map fromIntegral . go . ord
 
 -- | Turn a Nyaa category into a Nyaa search RSS URL.
 urlFromCat :: NyaaCat -> String -> String
-urlFromCat All          = ("https://www.nyaa.se/?page=rss&term=" ++)
-urlFromCat AllAnime     = ("https://www.nyaa.se/?page=rss&cats=1_0&term=" ++)
-urlFromCat EnglishAnime = ("https://www.nyaa.se/?page=rss&cats=1_37&term=" ++)
-urlFromCat RawAnime     = ("https://www.nyaa.se/?page=rss&cats=1_11&term=" ++)
+urlFromCat All          = ("https://www.nyaa.si/?page=rss&q=" ++)
+urlFromCat AllAnime     = ("https://www.nyaa.si/?page=rss&c=1_0&q=" ++)
+urlFromCat EnglishAnime = ("https://www.nyaa.si/?page=rss&c=1_2&q=" ++)
+urlFromCat RawAnime     = ("https://www.nyaa.si/?page=rss&c=1_4&q=" ++)
 
 -- | Turn a Nyaa category and an offset into a Nyaa search RSS URL.
 rssUrl :: NyaaCat -> Int -> String -> String
 rssUrl cat n search
-  | n > 1     = base ++ "&offset=" ++ show n
+  | n > 1     = base ++ "&f=" ++ show n
   | otherwise = base
   where
     base = urlFromCat cat (urlEncode search)

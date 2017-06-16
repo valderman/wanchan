@@ -44,8 +44,7 @@ rssHandler mkURLs _ = do
         Right (RSSFeed rss) -> mapM mkItem (rssItems $ rssChannel rss)
         Right _             -> fail $ "feed `" ++ url ++ "' is not in " ++
                                       "RSS format"
-        Left err            -> fail $ "unable to get RSS feed `" ++ url ++
-                                      "': " ++ err
+        Left err            -> pure []
     urls = mkURLs []
 
     mkItem item =
