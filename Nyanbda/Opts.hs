@@ -128,11 +128,12 @@ opts =
     "This is the default behavior."
   , Right $ Option "f" ["force"]       (NoArg (setInteractive False)) $
     "Don't prompt the user before downloading files."
-  , Right $ Option ""  ["seen"]        (ReqArg setSeenFile "FILE") $
-    "Use FILE as this sessions `seen' file. Episodes present in FILE " ++
-    "will be considered already seen, and thus not included in search " ++
-    "results. Any episodes downloaded as a result of a invocation " ++
-    "using this option will be appended to FILE as well."
+  , Right $ Option "c"  ["database"]   (ReqArg setDatabase "FILE") $
+    "Use FILE as this sessions database file. Episodes present in the " ++
+    "database's seen episodes list will be considered already seen, " ++
+    "and thus not included in search results. " ++
+    "Any episodes downloaded as a result of a invocation " ++
+    "using this option will be appended to the seen list as well."
   , Right $ Option "h?" ["help"]       (NoArg printHelp) "Display this message."
   ]
 
@@ -397,9 +398,9 @@ parseExec cmd p ep =
     subst (x:xs)       = "%" : x : subst xs
     subst _            = []
 
--- | Set the @seen@ file.
-setSeenFile :: FilePath -> Option
-setSeenFile file = SetFlag $ \c -> pure c {cfgSeenFile = Just file}
+-- | Set the session's database file.
+setDatabase :: FilePath -> Option
+setDatabase file = SetFlag $ \c -> pure c {cfgDatabase = Just file}
 
 -- | Set anime style name display.
 animeStyle :: Option

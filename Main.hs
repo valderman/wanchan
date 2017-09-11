@@ -9,7 +9,8 @@ import Nyanbda.Filtering
 import Nyanbda.Opts
 import Nyanbda.Sources
 import Nyanbda.Types
-import Nyanbda.Parser (parseEpisode)
+import Nyanbda.Database
+import Database.Selda.SQLite
 
 -- TODO: populate "seen" cache using episodes stored on disk
 main :: IO ()
@@ -20,30 +21,20 @@ runMain defconfig cmd = do
   act <- parseConfig defconfig cmd
   case act of
     SucceedWith s  -> echo s >> exit
-    List   cfg str -> get True cfg str
-    Get    cfg str -> get False cfg str
-    Batch  cfg str -> batch cfg (words str)
-    Daemon t cfg str -> daemon t cfg (words str)
-
--- | Read the `seen' file, if any.
-readSeenEpisodes :: Maybe FilePath -> Shell [Episode]
-readSeenEpisodes (Just f) = do
-  isf <- isFile f
-  if isf
-    then withFile f ReadMode $ \h -> do
-      seen <- map parseEpisode . lines <$> hGetContents h
-      length seen `seq` return seen
-    else return []
-readSeenEpisodes _ = do
-  return []
+    List   cfg str -> initDB cfg >> get True cfg str
+    Get    cfg str -> initDB cfg >> get False cfg str
+    Batch  cfg str -> initDB cfg >> batch cfg (words str)
+    Daemon t cfg str -> initDB cfg >> daemon t cfg (words str)
+  where
+    initDB = liftIO . maybe (pure ()) (flip withSQLite initialize) . cfgDatabase
 
 -- | Run in daemon mode: like batch mode, but re-run every n minutes.
 daemon :: Int -> Config -> [FilePath] -> Shell ()
 daemon minutes cfg files = do
     echo $ "Scheduling batch runs every " ++ show minutes ++ " minutes."
     echo $ "Batch files used: " ++ intercalate ", " files
-    case cfgSeenFile cfg of
-      Just f -> echo $ "Seen file used: " ++ f
+    case cfgDatabase cfg of
+      Just f -> echo $ "Database used: " ++ f
       _      -> return ()
     go
   where
@@ -75,9 +66,10 @@ batch cfg files = do
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]
 search cfg str = do
-    eps <- mapM (\h -> h str) handlers
-    seen <- readSeenEpisodes (cfgSeenFile cfg)
-    return . filterEpisodes cfg . filterSeen seen . concat $ eps
+    eps <- filterEpisodes cfg . concat <$> mapM (\h -> h str) handlers
+    case cfgDatabase cfg of
+      Just db -> liftIO $ withSQLite db (filterSeen eps)
+      _       -> pure eps
   where
     handlers = map srcHandler $ cfgSources cfg
 
@@ -112,9 +104,9 @@ get dryrun cfg str = do
       mapM_ (liftIO . system) cmds
 
       -- Save to seen file, if applicable
-      case cfgSeenFile cfg of
-        Just f -> liftIO $ appendFile f (unlines $ map (episodeName cfg) items)
-        _      -> return ()
+      case cfgDatabase cfg of
+        Just db -> liftIO $ withSQLite db $ addSeen items
+        _       -> return ()
   where
     mkFileName ep = outdir </> episodeName cfg ep <.> "torrent"
     download ep = fetchFile (mkFileName ep) (torrentLink ep)

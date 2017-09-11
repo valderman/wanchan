@@ -1,6 +1,7 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, DeriveGeneric #-}
 -- | Basic types representing episodes.
 module Nyanbda.Types where
+import GHC.Generics
 
 type URL = String
 
@@ -29,7 +30,7 @@ data Episode = Episode {
 
     -- | Extension of the file, if known.
     fileExtension :: Maybe String
-  } deriving Show
+  } deriving (Show, Generic)
 
 -- | An episode with no information whatsoever.
 nullEpisode :: Episode

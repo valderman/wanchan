@@ -10,9 +10,9 @@ data Config = Config {
     --   directory is used.
     cfgOutdir      :: Maybe FilePath,
 
-    -- | List of already seen episodes for this invocation. Episodes in this
-    --   file will not be considered for downloading.
-    cfgSeenFile    :: Maybe FilePath,
+    -- | Nyanbda's SQLite database file. Stores watch list for daemon mode,
+    --   as well as the list of seen episodes.
+    cfgDatabase    :: Maybe FilePath,
     
     -- | Sources to search.
     cfgSources     :: [Source],
@@ -63,7 +63,7 @@ episodeName = cfgNameStyle
 defaultConfig :: Config
 defaultConfig = Config {
     cfgOutdir      = Nothing,
-    cfgSeenFile    = Nothing,
+    cfgDatabase    = Nothing,
     cfgSources     = [],
     cfgNameStyle   = episodeNameAnime,
     cfgInteractive = True,

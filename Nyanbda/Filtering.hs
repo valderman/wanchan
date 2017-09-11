@@ -1,16 +1,9 @@
 {-# LANGUAGE RecordWildCards #-}
-module Nyanbda.Filtering (filterEpisodes, filterSeen) where
+module Nyanbda.Filtering (filterEpisodes) where
 import Data.List
 import Data.Maybe
 import Nyanbda.Config
 import Nyanbda.Types
-
--- | Remove all episodes that were already seen. Does not preserve the order
---   of the remaining episodes in the list.
-filterSeen :: [Episode] -- ^ List of already seen episodes.
-           -> [Episode] -- ^ List of episodes to filter.
-           -> [Episode]
-filterSeen seen = flip (unorderedMinusBy orderEp) seen
 
 -- | Like @\\@, but does not preserve the ordering of the resulting list.
 --   Also removes every occurrences of [y <- ys] from xs, not just the first.
