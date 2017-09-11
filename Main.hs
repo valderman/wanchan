@@ -52,6 +52,7 @@ batch cfg files = do
     when (cfgInteractive cfg) $ do
       go True
       echo_ "Do you want to continue? [Y/n] "
+      getStdOut >>= hFlush
       unless ((`elem` ["y","Y",""]) <$> ask) exit
     go False
   where
@@ -95,6 +96,7 @@ get dryrun cfg str = do
     unless dryrun $ do
       when (cfgInteractive cfg) $ do
         echo_ "Do you want to continue? [Y/n] "
+        getStdOut >>= hFlush
         unless ((`elem` ["y","Y",""]) <$> ask) exit
 
       -- Download torrents in batches of 13
