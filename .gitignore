@@ -4,3 +4,6 @@
 \#*
 .*
 dist/
+*.jsmod
+_site
+*.sqlite
