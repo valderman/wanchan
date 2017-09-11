@@ -115,9 +115,9 @@ However, this will re-download *all* episodes of the series given in
 To avoid this, we can use a "seen" file: a file which records the episodes
 nyanbda has already downloaded.
 
-    $ nyanbda --daemon=60 batch.txt -o./torrents -x'rtorrent %f' --seen=seen.txt
+    $ nyanbda --daemon=60 batch.txt -o./torrents -x'rtorrent %f' --database=db.sqlite
 
 
-This will use the file `seen.txt` to record episode titles as they are
+This will use the file `db.sqlite` to record episode titles as they are
 downloaded. New downloads are not initiated for episodes that are recorded in
 this file.
