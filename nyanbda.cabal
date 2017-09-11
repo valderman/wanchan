@@ -19,6 +19,7 @@ executable nyanbda
   main-is:
     Main.hs
   other-modules:
+    Nyanbda.Backend,
     Nyanbda.Config,
     Nyanbda.Database,
     Nyanbda.Filtering,
@@ -28,7 +29,11 @@ executable nyanbda
     Nyanbda.Sources.RSS,
     Nyanbda.Sources.Types,
     Nyanbda.Types,
-    Nyanbda.Parser
+    Nyanbda.Parser,
+    Nyanbda.Web,
+    Nyanbda.Web.API,
+    Nyanbda.Web.Server,
+    Nyanbda.Web.Config
   other-extensions:
     TupleSections,
     OverloadedStrings
@@ -45,6 +50,9 @@ executable nyanbda
     process          >=1.2   && <1.3,
     selda            >=0.1.11 && <0.2,
     selda-sqlite     >=0.1.3  && <0.2,
+    -- for web daemon
+    haste-lib        >=0.6   && <0.7,
+    haste-app        >=0.1   && <0.2,
     -- workaround for broken utf8 in feed
     bytestring       >=0.10.6 && <0.11,
     utf8-string      >=1   && <1.1

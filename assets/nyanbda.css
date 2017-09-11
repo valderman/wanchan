@@ -1,0 +1,58 @@
+body {
+    font-family: sans-serif;
+}
+
+#topbar {
+    text-align: right;
+    position: fixed;
+    left: -5%;
+    top: 0;
+    width: 110%;
+    background-color: black;
+    box-shadow: 0 0.5em 0.5em grey;
+    margin: 0;
+}
+
+.pane {
+    vertical-align: top;
+    text-align: left;
+    display: inline-block;
+    width: 40%;
+    min-width: 40em;
+    border: 1px solid black;
+    border-radius: 0.25em;
+    padding: 2em;
+    margin: 1em;
+}
+
+.resultrow {
+    font-size: 14pt;
+    list-style-type: none;
+    margin: 0.5em;
+}
+
+.resultrow a {
+    text-decoration: none;
+    font-family: sans-serif;
+    color: #20a0ff;
+}
+
+#searchbar {
+    padding: 0.25em;
+    margin: 0.75em;
+}
+
+#searchbtn {
+    padding: 0.25em;
+    margin-right: 20%;
+}
+
+#outer {
+    position: absolute;
+    margin: auto;
+    top: 5em;
+    left: 0;
+    right: 0;
+    width: 85%;
+    text-align: center;
+}

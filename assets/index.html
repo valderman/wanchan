@@ -1,0 +1,26 @@
+<!doctype HTML>
+<html>
+  <head>
+    <title>Nyanbda web interface</title>
+    <script src="WebMain.js"></script>
+    <link rel="stylesheet" type="text/css" href="nyanbda.css">
+  </head>
+  <body>
+    <div id="outer">
+      <div id="searchpane" class="pane">
+        <h2>Latest series</h2>
+        <p>Click a series to add it to your watch list.</p>
+        <ul id="results"></ul>
+      </div>
+      <div id="watchpane" class="pane">
+        <h2>Watch list</h2>
+        <p>Click a series to remove it from your watch list.</p>
+        <ul id="watchlist"></ul>
+      </div>
+    </div>
+    <div id="topbar">
+      <input type="text" id="searchbar" placeholder="Find series...">
+      <button id="searchbtn">Go!</button>
+    </div>
+  </body>
+</html>

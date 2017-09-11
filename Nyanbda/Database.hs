@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings, TypeOperators, DeriveGeneric, FlexibleInstances, GADTs #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Nyanbda.Database
-  ( Series (..), SeenEpisode (..)
+  ( Series (..), SeenEpisode (..), Resolution (..)
   , initialize
   , filterSeen, addSeen
+  , addWatch, removeWatch, allWatched
   ) where
 import Database.Selda
 import Database.Selda.Backend
@@ -30,10 +31,10 @@ instance SqlType String where
 
 data Series = Series
   { seriesName :: String
-  , seriesSeason :: Maybe Int
+  , seriesSeason :: Int
   , seriesGroup :: String
-  , seriesResolution :: String
-  } deriving Generic
+  , seriesResolution :: Resolution
+  } deriving (Eq, Ord, Generic)
 
 data SeenEpisode = SeenEpisode
   { seenName :: String
@@ -45,10 +46,15 @@ data SeenEpisode = SeenEpisode
 seenTable :: GenTable SeenEpisode
 seenTable = genTable "seen" []
 
+-- | The table of all watched series.
+watchTable :: GenTable Series
+watchTable = genTable "watched" []
+
 -- | Initialize the database if it isn't already initialized.
 initialize :: SeldaM ()
 initialize = do
   tryCreateTable (gen seenTable)
+  tryCreateTable (gen watchTable)
 
 -- | Remove all episodes that already exist in the seen episodes list.
 filterSeen :: [Episode] -> SeldaM [Episode]
@@ -72,3 +78,22 @@ addSeen = insertGen_ seenTable . map toSeenEpisode
       , seenSeason = seasonNumber ep
       , seenEpisode = episodeNumber ep
       }
+
+-- | Add zero or more series to the watch list.
+addWatch :: [Series] -> SeldaM ()
+addWatch series = do
+  mapM_ removeWatch series
+  insertGen_ watchTable series
+
+-- | Remove the give series from the watch list.
+removeWatch :: Series -> SeldaM ()
+removeWatch s = do
+  deleteFrom_ (gen watchTable) $ \(n :*: ssn :*: g :*: r) ->
+    n .== literal (Nyanbda.Database.seriesName s) .&&
+    ssn .== literal (seriesSeason s) .&&
+    g .== literal (seriesGroup s) .&&
+    r .== literal (seriesResolution s)
+
+-- | Get all series currently on the watch list.
+allWatched :: SeldaM [Series]
+allWatched = map fromRel <$> query (select (gen watchTable))

@@ -198,7 +198,7 @@ pList = many1 (noneOf ",") `sepBy1` char ','
 integer :: Parser Int
 integer = try $ read <$> many1 digit
 
--- | Parse a flag value. If the value could not be parser, fail with an error
+-- | Parse a flag value. If the value could not be parsed, fail with an error
 --   message about @e@ having an invalid value.
 parseFlagVal :: Parser a -> String -> String -> Either String a
 parseFlagVal p e s =

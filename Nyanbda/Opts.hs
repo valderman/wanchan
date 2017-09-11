@@ -18,6 +18,7 @@ data Action
   | Get         Config String
   | Batch       Config String
   | Daemon      Int Config String
+  | WebDaemon   Int Config String
 
 -- | An option set by a config file or on the command line.
 data Option
@@ -51,16 +52,19 @@ opts =
   , Right $ Option "L" ["list"]        (NoArg listWithDupes) $
     "List all torrents matching the search string and filters. " ++
     "This is the default action. Implies --allow-duplicates."
+  , Right $ Option "W" ["web-daemon"]  (ReqArg setWebDaemon "MINS") $
+    "Check for updates to watched series every MINS minutes. " ++
+    "Unlike daemon mode, watched series are not read from batch files, " ++
+    "but added using a web interface."
 
   , Left "Filtering options"
   , Right $ Option "s" ["season"]      (ReqArg addSeasons "SEASON") $
     "Only match episodes from the given SEASON. SEASON may be either an " ++
     "integer or a range of integers given as 'a..b'. This option may be " ++
     "given several times to specify multiple seasons."
-  , Right $ Option "e" ["episode"]     (ReqArg addEpisodes "EPISODE") $
+  , Right $ Option "e" ["episode"]     (ReqArg setEpisodes "EPISODE") $
     "Only match the given EPISODEs. EPISODE may be either an " ++
-    "integer or a range of integers given as 'a..b'. This option may be " ++
-    "given several times to specify multiple episodes."
+    "integer or a range of integers given as 'a..b'."
   , Right $ Option "l" ["latest"]      (OptArg getLatest "yes/no") $
     "Match only the latest episode of the series. If there is more than " ++
     "one season of the matching series, the latest episode of the latest " ++
@@ -128,12 +132,14 @@ opts =
     "This is the default behavior."
   , Right $ Option "f" ["force"]       (NoArg (setInteractive False)) $
     "Don't prompt the user before downloading files."
-  , Right $ Option "c"  ["database"]   (ReqArg setDatabase "FILE") $
+  , Right $ Option "b"  ["database"]   (ReqArg setDatabase "FILE") $
     "Use FILE as this sessions database file. Episodes present in the " ++
     "database's seen episodes list will be considered already seen, " ++
     "and thus not included in search results. " ++
     "Any episodes downloaded as a result of a invocation " ++
-    "using this option will be appended to the seen list as well."
+    "using this option will be appended to the seen list as well." ++
+    "Additionally, in web daemon mode, the list of series to watch for" ++
+    "is also stored in this database."
   , Right $ Option "h?" ["help"]       (NoArg printHelp) "Display this message."
   ]
 
@@ -247,10 +253,16 @@ mkConfig c os = do
     hoistEither (Right r) = pure r
 
 -- | Parse an integer range. A single integer qualifies as a singleton range.
-pIntRange :: Parser [Int]
+pIntRange :: Parser (Int, Int)
 pIntRange = do
   m <- integer
   n <- P.try (spaces *> string ".." *> spaces *> integer) <|> pure m
+  return (m, n)
+
+-- | Parse an integer range as a list. A single integer qualifies as a singleton range.
+pIntList :: Parser [Int]
+pIntList = do
+  (m, n) <- pIntRange
   return [m..n]
 
 -- | Parse a supported source name.
@@ -290,14 +302,14 @@ listWithDupes = Group [setAction List, allowDupes (Just "yes")]
 -- | Add a range of seasons to match.
 addSeasons :: String -> Option
 addSeasons s = SetFlag $ \c -> do
-  ss <- parseFlagVal pIntRange "--season" s
+  ss <- parseFlagVal pIntList "--season" s
   pure $ c {cfgSeasons = snub $ ss ++ cfgSeasons c}
 
--- | Add a range of episodes to match.
-addEpisodes :: String -> Option
-addEpisodes e = SetFlag $ \c -> do
+-- | Set the range of episodes to match.
+setEpisodes :: String -> Option
+setEpisodes e = SetFlag $ \c -> do
   es <- parseFlagVal pIntRange "--episode" e
-  pure $ c {cfgEpisodes = snub $ es ++ cfgEpisodes c}
+  pure $ c {cfgEpisodes = es}
 
 -- | Add an acceptable release group.
 addGroup :: String -> Option
@@ -332,7 +344,7 @@ clearAllMatches = SetFlag $ \c -> pure $ c {
     cfgResolutions = [],
     cfgGroups = [],
     cfgSeasons = [],
-    cfgEpisodes = []
+    cfgEpisodes = (0, 1000000000)
   }
 
 -- | Allow duplicate episodes?
@@ -365,6 +377,10 @@ setOutdir dir = SetFlag $ \c -> pure c {cfgOutdir = Just dir}
 -- | Run in daemon mode.
 setDaemon :: String -> Option
 setDaemon t = setAction (Daemon (read t))
+
+-- | Run in web daemon mode.
+setWebDaemon :: String -> Option
+setWebDaemon t = setAction (WebDaemon (read t))
 
 -- | Set command to execute for each episode.
 setExec :: String -> Option

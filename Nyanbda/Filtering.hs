@@ -45,7 +45,7 @@ filterEpisodes (Config {..}) allEps
       | Just s <- seasonNumber  = s `elem` cfgSeasons
       | otherwise               = 1 `elem` cfgSeasons
     episodes (Episode {..})
-      | Just e <- episodeNumber = e `elem` cfgEpisodes
+      | Just e <- episodeNumber = e >= fst cfgEpisodes && e <= snd cfgEpisodes
       | otherwise               = False
     exts (Episode {..})
       | Just e <- fileExtension = e `elem` cfgExtensions

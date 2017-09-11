@@ -33,7 +33,7 @@ data Config = Config {
     cfgSeasons     :: [Int],
 
     -- | Permissible episodes.
-    cfgEpisodes    :: [Int],
+    cfgEpisodes    :: (Int, Int),
 
     -- | Always match the latest episode?
     --   If one or more seasons are given, this will always match the latest
@@ -69,7 +69,7 @@ defaultConfig = Config {
     cfgInteractive = True,
     cfgExec        = Nothing,
     cfgSeasons     = [],
-    cfgEpisodes    = [],
+    cfgEpisodes    = (0, 1000000000),
     cfgMatchLatest = False,
     cfgExtensions  = [],
     cfgResolutions = [],
