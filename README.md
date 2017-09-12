@@ -15,6 +15,7 @@ downloading and watching anime series. It has the following features:
 * Batch mode: perform a whole bunch of searches at once.
 * Daemon mode: never miss a release again, let nyanbda keep track of new
   episodes.
+* Web daemon mode: explore and track new releases using a fancy web interface.
 
 
 Building and installing
@@ -107,7 +108,7 @@ This will download the first season of Assassination Classroom in 480p, and the
 third season of YuruYuri in 1080p to the `torrents` subdirectory, and
 then run the `rtorrent` command on each downloaded torrent file.
 
-Finally, you can also set nyanbda to watch Nyaa for new episodes for you using
+You can also set nyanbda to watch Nyaa for new episodes for you using
 daemon mode:
 
     $ nyanbda --daemon=60 batch.txt -o./torrents -x'rtorrent %f'
@@ -121,7 +122,15 @@ nyanbda has already downloaded.
 
     $ nyanbda --daemon=60 batch.txt -o./torrents -x'rtorrent %f' --database=db.sqlite
 
-
 This will use the file `db.sqlite` to record episode titles as they are
 downloaded. New downloads are not initiated for episodes that are recorded in
 this file.
+
+Finally, you can tell nyanbda to start in _web daemon mode_: a web application
+which lets you easily explore and track new releases.
+This mode accepts the same flags as daemon mode, except that watched series are
+stored in the database file and not in separate batch text files:
+
+    $ nyanbda --web-daemon=60 -o./torrents -x'rtorrent %f' --database=db.sqlite
+
+To access the web interface, point your browser to `http://localhost:8888`.
