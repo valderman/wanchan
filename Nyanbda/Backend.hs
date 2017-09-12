@@ -120,9 +120,9 @@ webDaemon minutes cfg = do
   where
     update db = do
       series <- unsafeLiftIO $ withSQLite db $ allWatched
-      mapM_ parallel_ $ chunks 5 (map check series)
-      unsafeLiftIO $ wait minutes
+      mapM_ check series
       echo $ "Done! Next run in " ++ show minutes ++ " minutes."
+      unsafeLiftIO $ wait minutes
       update db
 
     check series = do
