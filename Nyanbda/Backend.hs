@@ -112,10 +112,11 @@ webDaemon minutes cfg = do
     echo $ "Scheduling updates every " ++ show minutes ++ " minutes."
     db <- fst <$> unsafeLiftIO getWebConfig
     unsafeLiftIO $ withSQLite db initialize
-    forkIO $ update db
     unsafeLiftIO $ do
       CC.forkIO $ serve (fromIntegral $ cfgHttpPort cfg) assets
-      webMain
+      CC.threadDelay 1000
+    forkIO $ update db
+    unsafeLiftIO $ webMain
   where
     update db = do
       series <- unsafeLiftIO $ withSQLite db $ allWatched
