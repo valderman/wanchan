@@ -5,6 +5,10 @@ install:
 	echo "`make user-install' will install into ~/.local/bin."
 	echo "`make global-install' will install into /usr/local/bin."
 
+deps:
+	cabal install --only-dependencies
+	haste-cabal install --only-dependencies
+
 user-install: prepared-binary
 	mkdir -p ~/.local/bin
 	cp nyanbda ~/.local/bin/

@@ -23,8 +23,10 @@ Building and installing
 Make sure you have the [Haskell platform](http://haskell.org/platform)
 installed and the [Haste compiler](https://haste-lang.org) and check out
 the repository.
-In the repository root, run `make user-install` to install nyanbda
-into `~/.local/bin`. You can also run `make global-install` as root, to
+
+In he repository root, run `make deps` to install all necessary dependencies.
+Then, run `make user-install` to install nyanbda into `~/.local/bin`.
+You can also run `make global-install` as root, to
 install for all users, or just `make` and grab the resulting binary yourself.
 
 
