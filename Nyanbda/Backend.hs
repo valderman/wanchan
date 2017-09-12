@@ -120,8 +120,9 @@ webDaemon minutes cfg = do
   where
     update db = do
       series <- unsafeLiftIO $ withSQLite db $ allWatched
-      mapM_ check series
+      mapM_ parallel_ $ chunks 5 (map check series)
       unsafeLiftIO $ wait minutes
+      putStrLn $ "Done! Next run in " ++ show minutes ++ " minutes."
       update db
 
     check series = do
@@ -135,7 +136,6 @@ webDaemon minutes cfg = do
           name = Nyanbda.Database.seriesName series
       echo $ "Checking for new episodes of " ++ name ++ "..."
       void . try $ get False cfg' name
-      echo "OK!"
 
     assets req = do
       case embeddedFile (maybeIndex $ drop 1 $ uriPath $ rqURI req) of
