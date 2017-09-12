@@ -13,15 +13,17 @@ import Nyanbda.Types as Episode (Episode (..), Resolution (..))
 import Data.Text (pack, unpack)
 
 instance SqlType Resolution where
-  mkLit SD480  = LCustom $ LInt 480
-  mkLit HD720  = LCustom $ LInt 720
-  mkLit HD1080 = LCustom $ LInt 1080
+  mkLit Unknown = LCustom $ LInt 0
+  mkLit SD480   = LCustom $ LInt 480
+  mkLit HD720   = LCustom $ LInt 720
+  mkLit HD1080  = LCustom $ LInt 1080
   sqlType _ = TInt
+  fromSql (SqlInt 0)    = Unknown
   fromSql (SqlInt 480)  = SD480
   fromSql (SqlInt 720)  = HD720
   fromSql (SqlInt 1080) = HD1080
   fromSql x             = error $ "non-resolution resolution: " ++ show x
-  defaultValue = mkLit SD480
+  defaultValue = mkLit Unknown
 
 instance SqlType String where
   mkLit = LCustom . LText . pack

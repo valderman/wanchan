@@ -11,22 +11,30 @@ instance Node Server
 
 instance Show Series where
   show s = concat
-    [ "[", seriesGroup s, "] "
+    [ if not (null (seriesGroup s))
+        then "[" ++ seriesGroup s ++ "] "
+        else ""
     , "<b>", seriesName s, "</b>"
-    , if seriesSeason s == 1 then "" else " S" ++ show (seriesSeason s)
-    , " (", showRes (seriesResolution s), ")"
+    , if seriesSeason s == 1
+        then ""
+        else " S" ++ show (seriesSeason s)
+    , if seriesResolution s /= Unknown
+        then " (" ++ showRes (seriesResolution s) ++ ")"
+        else ""
     ]
 
 showRes :: Resolution -> String
 showRes r = case toJSON r of Str r' -> fromJSStr r'
 
 instance Serialize Resolution where
-  toJSON HD1080 = "1080p"
-  toJSON HD720  = "720p"
-  toJSON SD480  = "480p"
+  toJSON HD1080  = "1080p"
+  toJSON HD720   = "720p"
+  toJSON SD480   = "480p"
+  toJSON Unknown = ""
   parseJSON (Str "1080p") = pure HD1080
   parseJSON (Str "720p")  = pure HD720
   parseJSON (Str "480p")  = pure SD480
+  parseJSON (Str "")      = pure Unknown
 
 instance Serialize Series where
   toJSON (Series t s g r) = Dict

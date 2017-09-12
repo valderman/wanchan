@@ -22,11 +22,11 @@ prepared-binary: binary web
 	cp dist/build/nyanbda/nyanbda ./
 
 web:
-	haste-cabal configure
-	haste-cabal build
+	hastec WebMain.hs
+	rm -r _site || true
 	mkdir -p _site
-	cp dist/build/WebMain/WebMain _site/WebMain.js
 	cp assets/* _site/
+	mv WebMain.js _site/WebMain.js
 
 binary:
 	cabal configure

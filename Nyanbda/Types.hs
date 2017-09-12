@@ -6,7 +6,7 @@ import GHC.Generics
 type URL = String
 
 -- | Resolution of a video file.
-data Resolution = SD480 | HD720 | HD1080
+data Resolution = Unknown | SD480 | HD720 | HD1080
   deriving (Show, Eq, Ord)
 
 data Episode = Episode {
@@ -95,6 +95,7 @@ pad minlen n = replicate (minlen-length s) '0' ++ s
 
 -- | Human readable resolution.
 showResolution :: Resolution -> String
-showResolution HD1080 = "1080p"
-showResolution HD720  = "720p"
-showResolution SD480  = "480p"
+showResolution HD1080  = "1080p"
+showResolution HD720   = "720p"
+showResolution SD480   = "480p"
+showResolution Unknown = "unknown"

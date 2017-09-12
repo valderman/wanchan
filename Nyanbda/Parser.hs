@@ -173,7 +173,7 @@ pSeasonEpNumber = try $ do
 --   Thus, 'Other' will never be returned.
 pResolution :: Parser Resolution
 pResolution =
-    choice [hd1080, hd720, sd480]
+    choice [hd1080, hd720, sd480, pure Unknown]
   where
     res :: String -> String -> Resolution -> Parser Resolution
     res w h r = do

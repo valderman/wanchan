@@ -36,9 +36,9 @@ mkSeries eps = snub
     , seriesSeason = maybe 1 id (seasonNumber ep)
     }
   | ep <- eps
-  , isJust (releaseGroup ep) && isJust (resolution ep)
+  , isJust (releaseGroup ep)
   , let Just group = releaseGroup ep
-  , let Just res = resolution ep
+  , let res = maybe Unknown id (resolution ep)
   ]
   where
     snub = map head . group . sort

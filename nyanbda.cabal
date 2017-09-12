@@ -22,6 +22,11 @@ flag haste
 executable WebMain
   main-is:
     WebMain.hs
+  other-modules:
+    Nyanbda.Database,
+    Nyanbda.Types,
+    Nyanbda.Web,
+    Nyanbda.Web.API
   if !flag(haste)
     buildable: False
   else
