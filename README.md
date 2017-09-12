@@ -21,9 +21,11 @@ Building and installing
 -----------------------
 
 Make sure you have the [Haskell platform](http://haskell.org/platform)
-installed and check out the repository.
-In the repository root, run `cabal install` to install nyanbda.
-You will probably want to add Cabal's binary directory to your `$PATH`.
+installed and the [Haste compiler](https://haste-lang.org) and check out
+the repository.
+In the repository root, run `make user-install` to install nyanbda
+into `~/.local/bin`. You can also run `make global-install` as root, to
+install for all users, or just `make` and grab the resulting binary yourself.
 
 
 Quickstart

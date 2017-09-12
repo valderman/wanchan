@@ -52,7 +52,10 @@ data Config = Config {
 
     -- | Allow several copies with different resolution, etc. of the same
     --   episode?
-    cfgAllowDupes  :: Bool
+    cfgAllowDupes  :: Bool,
+
+    -- | Port to serve web UI from in web daemon mode.
+    cfgHttpPort :: Int
   }
 
 -- | Show an episode name appropriately according to config.
@@ -74,5 +77,6 @@ defaultConfig = Config {
     cfgExtensions  = [],
     cfgResolutions = [],
     cfgGroups      = [],
-    cfgAllowDupes  = False
+    cfgAllowDupes  = False,
+    cfgHttpPort    = 8888
   }

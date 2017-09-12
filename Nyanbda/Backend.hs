@@ -1,5 +1,5 @@
 module Nyanbda.Backend (runMain, batch, search, get) where
-import Control.Concurrent (threadDelay)
+import qualified Control.Concurrent as CC (threadDelay, forkIO)
 import Control.Shell
 import Control.Shell.Concurrent
 import Control.Shell.Download
@@ -16,6 +16,9 @@ import Database.Selda.SQLite
 -- TODO: make this conditional
 import Nyanbda.Web
 import Nyanbda.Web.Config
+import Nyanbda.Web.HttpServer
+import Data.Embed
+import qualified Data.ByteString as BS
 
 -- | Main entry point of application.
 runMain :: Config -> [String] -> Shell ()
@@ -110,7 +113,9 @@ webDaemon minutes cfg = do
     db <- fst <$> unsafeLiftIO getWebConfig
     unsafeLiftIO $ withSQLite db initialize
     forkIO $ update db
-    unsafeLiftIO webMain
+    unsafeLiftIO $ do
+      CC.forkIO $ serve (fromIntegral $ cfgHttpPort cfg) assets
+      webMain
   where
     update db = do
       series <- unsafeLiftIO $ withSQLite db $ allWatched
@@ -131,6 +136,13 @@ webDaemon minutes cfg = do
       void . try $ get False cfg' name
       echo "OK!"
 
+    assets req = do
+      case embeddedFile (maybeIndex $ drop 1 $ uriPath $ rqURI req) of
+        Just f -> respond f
+        _      -> notFound BS.empty
+    maybeIndex "" = "index.html"
+    maybeIndex s  = s
+
 -- | Run in daemon mode: like batch mode, but re-run every n minutes.
 daemon :: Int -> Config -> [FilePath] -> Shell ()
 daemon minutes cfg files = do
@@ -148,5 +160,5 @@ daemon minutes cfg files = do
 
 wait :: Int -> IO ()
 wait mins
-  | mins <= 10 = threadDelay (mins*60*1000000)
-  | otherwise  = threadDelay (10*60*1000000) >> wait (mins-10)
+  | mins <= 10 = CC.threadDelay (mins*60*1000000)
+  | otherwise  = CC.threadDelay (10*60*1000000) >> wait (mins-10)

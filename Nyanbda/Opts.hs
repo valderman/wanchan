@@ -132,6 +132,9 @@ opts =
     "This is the default behavior."
   , Right $ Option "f" ["force"]       (NoArg (setInteractive False)) $
     "Don't prompt the user before downloading files."
+  , Right $ Option "p" ["port"]        (ReqArg setPort "PORT") $
+    "Listen for incoming HTTP connections on PORT." ++
+    "Only applies to web daemon mode."
   , Right $ Option "b"  ["database"]   (ReqArg setDatabase "FILE") $
     "Use FILE as this sessions database file. Episodes present in the " ++
     "database's seen episodes list will be considered already seen, " ++
@@ -381,6 +384,10 @@ setDaemon t = setAction (Daemon (read t))
 -- | Run in web daemon mode.
 setWebDaemon :: String -> Option
 setWebDaemon t = setAction (WebDaemon (read t))
+
+-- | Run in web daemon mode.
+setPort :: String -> Option
+setPort p = SetFlag $ \c -> pure c {cfgHttpPort = read p}
 
 -- | Set command to execute for each episode.
 setExec :: String -> Option
