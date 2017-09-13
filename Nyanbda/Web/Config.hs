@@ -2,13 +2,14 @@ module Nyanbda.Web.Config (getWebConfig, setWebConfig) where
 import Data.IORef
 import Nyanbda.Config
 import System.IO.Unsafe
+import Database.Selda.Backend
 
 {-# NOINLINE activeWebConfig #-}
-activeWebConfig :: IORef (FilePath, Config)
-activeWebConfig = unsafePerformIO $ newIORef ("", defaultConfig)
+activeWebConfig :: IORef (SeldaConnection, Config)
+activeWebConfig = unsafePerformIO $ newIORef (undefined, defaultConfig)
 
-setWebConfig :: FilePath -> Config -> IO ()
+setWebConfig :: SeldaConnection -> Config -> IO ()
 setWebConfig db cfg = writeIORef activeWebConfig (db, cfg)
 
-getWebConfig :: IO (FilePath, Config)
+getWebConfig :: IO (SeldaConnection, Config)
 getWebConfig = readIORef activeWebConfig

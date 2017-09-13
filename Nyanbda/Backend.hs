@@ -13,6 +13,7 @@ import Nyanbda.Sources
 import Nyanbda.Types
 import Nyanbda.Database
 import Database.Selda.SQLite
+import Database.Selda.Backend (runSeldaT)
 
 -- TODO: make this conditional
 import Nyanbda.Web
@@ -96,7 +97,7 @@ get dryrun cfg str = do
 
       -- Save to seen file, if applicable
       case cfgDatabase cfg of
-        Just db -> unsafeLiftIO $ withSQLite db $ addSeen items
+        Just db -> unsafeLiftIO $ withSQLite db (addSeen items)
         _       -> return ()
   where
     mkFileName ep = outdir </> episodeName cfg ep <.> "torrent"
@@ -107,12 +108,12 @@ get dryrun cfg str = do
 --   provided by web interface.
 webDaemon :: Int -> Config -> Shell ()
 webDaemon minutes cfg = do
-    unsafeLiftIO $ case cfgDatabase cfg of
-      Just f -> setWebConfig f cfg >> putStrLn ("using database `" ++ f ++ "'")
-      _      -> setWebConfig "" cfg >> putStrLn "using in-memory database"
+    db <- unsafeLiftIO $ case cfgDatabase cfg of
+      Just f -> putStrLn ("using database `" ++ f ++ "'") >> sqliteOpen f
+      _      -> putStrLn "using temporary in-memory database" >> sqliteOpen "nyanbda.sqlite"
+    unsafeLiftIO $ setWebConfig db cfg
     echo $ "Scheduling updates every " ++ show minutes ++ " minutes."
-    db <- fst <$> unsafeLiftIO getWebConfig
-    unsafeLiftIO $ withSQLite db initialize
+    unsafeLiftIO $ runSeldaT initialize db
     unsafeLiftIO $ do
       CC.forkIO $ serve (fromIntegral $ cfgHttpPort cfg) assets
       CC.threadDelay 1000
@@ -120,7 +121,7 @@ webDaemon minutes cfg = do
     unsafeLiftIO $ webMain
   where
     update db = do
-      series <- unsafeLiftIO $ withSQLite db $ allWatched
+      series <- unsafeLiftIO $ runSeldaT allWatched db
       mapM_ check series
       echo $ "Done! Next run in " ++ show minutes ++ " minutes."
       unsafeLiftIO $ wait minutes
@@ -145,8 +146,6 @@ webDaemon minutes cfg = do
         "/WebMain.js"  -> respond $(embedFile "WebMain.js")
         "/nyanbda.css" -> respond $(embedFile "assets/nyanbda.css")
         _              -> notFound BS.empty
-    maybeIndex "" = "index.html"
-    maybeIndex s  = s
 
 -- | Run in daemon mode: like batch mode, but re-run every n minutes.
 daemon :: Int -> Config -> [FilePath] -> Shell ()

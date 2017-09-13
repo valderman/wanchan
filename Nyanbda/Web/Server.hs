@@ -14,10 +14,12 @@ import Data.Maybe (isJust)
 import Data.Text (Text, pack, unpack)
 import Database.Selda hiding (Result)
 import Database.Selda.SQLite
+import Database.Selda.Backend (runSeldaT)
 
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]
-search cfg str = concat <$> mapM (\h -> h str) handlers
+search cfg str = do
+    concat <$> mapM (\h -> h str) handlers
   where
     handlers = map srcHandler $ cfgSources cfg
 
@@ -47,7 +49,7 @@ mkSeries eps = snub
 addSeries :: Import (Series -> Server [Series])
 addSeries = remote $ \s -> liftIO $ do
   db <- fst <$> getWebConfig
-  withSQLite db $ do
+  flip runSeldaT db $ do
     addWatch [s]
     allWatched
 
@@ -55,7 +57,7 @@ addSeries = remote $ \s -> liftIO $ do
 delSeries :: Import (Series -> Server [Series])
 delSeries = remote $ \s -> liftIO $ do
   db <- fst <$> getWebConfig
-  withSQLite db $ do
+  flip runSeldaT db $ do
     removeWatch s
     allWatched
 
@@ -63,4 +65,4 @@ delSeries = remote $ \s -> liftIO $ do
 getWatchList :: Import (Server [Series])
 getWatchList = remote $ liftIO $ do
   db <- fst <$> getWebConfig
-  withSQLite db allWatched
+  runSeldaT allWatched db
