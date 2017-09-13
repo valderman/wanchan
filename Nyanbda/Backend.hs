@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Nyanbda.Backend (runMain, batch, search, get) where
 import qualified Control.Concurrent as CC (threadDelay, forkIO)
 import Control.Shell
@@ -17,7 +18,7 @@ import Database.Selda.SQLite
 import Nyanbda.Web
 import Nyanbda.Web.Config
 import Nyanbda.Web.HttpServer
-import Data.Embed
+import Data.FileEmbed
 import qualified Data.ByteString as BS
 
 -- | Main entry point of application.
@@ -138,9 +139,12 @@ webDaemon minutes cfg = do
       void . try $ get False cfg' name
 
     assets req = do
-      case embeddedFile (maybeIndex $ drop 1 $ uriPath $ rqURI req) of
-        Just f -> respond f
-        _      -> notFound BS.empty
+      case uriPath $ rqURI req of
+        "/"            -> respond $(embedFile "assets/index.html")
+        "/index.html"  -> respond $(embedFile "assets/index.html")
+        "/WebMain.js"  -> respond $(embedFile "WebMain.js")
+        "/nyanbda.css" -> respond $(embedFile "assets/nyanbda.css")
+        _              -> notFound BS.empty
     maybeIndex "" = "index.html"
     maybeIndex s  = s
 

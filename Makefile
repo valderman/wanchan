@@ -1,7 +1,6 @@
 binary: web
 	stack install --local-bin-path . || /usr/local/bin/stack install --local-bin-path .
 	strip -s ./nyanbda || strip -s ./nyanbda.exe
-	embedtool -p1 -r -w ./nyanbda _site/* || /usr/local/bin/embedtool -p1 -r -w ./nyanbda _site/*
 
 all: deb
 
@@ -37,8 +36,3 @@ global-install: prepared-binary
 
 web:
 	hastec WebMain.hs
-	rm -r _site || true
-	mkdir -p _site
-	cp assets/* _site/
-	mv WebMain.js _site/WebMain.js
-
