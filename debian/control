@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 9)
 
 Package: nyanbda
 Architecture: amd64
-Depends: ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Nyaa Torrents watcher and downloader
  Queries, downloads and watches torrents from Nyaa Torrents.
  Supports several different execution modes, including interactive,

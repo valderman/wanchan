@@ -1,5 +1,7 @@
+STACKOPTS=--split-objs --local-bin-path .
+
 binary: web
-	stack install --local-bin-path . || /usr/local/bin/stack install --local-bin-path .
+	stack install $(STACKOPTS) || /usr/local/bin/stack install $(STACKOPTS)
 	strip -s ./nyanbda || strip -s ./nyanbda.exe
 
 all: deb
