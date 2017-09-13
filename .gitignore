@@ -10,3 +10,7 @@ _site
 nyanbda
 WebMain.js
 haste-app
+*.deb
+*.log
+*.substvars
+debian/files
