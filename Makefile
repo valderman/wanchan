@@ -1,9 +1,25 @@
-all: prepared-binary
+binary: web
+	stack install --local-bin-path . || /usr/local/bin/stack install --local-bin-path .
+	strip -s ./nyanbda || strip -s ./nyanbda.exe
+	embedtool -p1 -r -w ./nyanbda _site/* || /usr/local/bin/embedtool -p1 -r -w ./nyanbda _site/*
 
-install:
-	echo "Either specify user-install or global-install."
-	echo "`make user-install' will install into ~/.local/bin."
-	echo "`make global-install' will install into /usr/local/bin."
+all: deb
+
+deb:
+	debuild -us -ec -b
+	mv ../nyanbda_*_amd64.deb ./
+	rm ../nyanbda_*_amd64.build
+	rm ../nyanbda_*_amd64.buildinfo
+	rm ../nyanbda_*_amd64.changes
+
+help:
+	@echo "The following targets are available:"
+	@echo "  all:            build all available packages (currently only deb)"
+	@echo "  binary:         build the nyanbda binary (this is the default)"
+	@echo "  deb:            build a debian package"
+	@echo "  deps:           install all necessary dependencies"
+	@echo "  global-install: build and install binary into /usr/local/bin"
+	@echo "  user-install:   build and install binary into ~/.local/bin"
 
 deps:
 	stack setup
@@ -19,10 +35,6 @@ user-install: prepared-binary
 global-install: prepared-binary
 	cp nyanbda /usr/local/bin/
 
-prepared-binary: binary web
-	strip -s ./nyanbda || strip -s ./nyanbda.exe
-	embedtool -p1 -r -w ./nyanbda _site/*
-
 web:
 	hastec WebMain.hs
 	rm -r _site || true
@@ -30,5 +42,3 @@ web:
 	cp assets/* _site/
 	mv WebMain.js _site/WebMain.js
 
-binary:
-	stack install --local-bin-path .
