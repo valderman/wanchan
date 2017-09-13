@@ -89,4 +89,4 @@ executable nyanbda
   default-language:
     Haskell2010
   ghc-options:
-    -Wall -static -optl-static
+    -Wall -static -optl-static -threaded -lpthread

@@ -6,7 +6,10 @@ install:
 	echo "`make global-install' will install into /usr/local/bin."
 
 deps:
-	cabal install --only-dependencies
+	stack setup
+	git clone https://github.com/valderman/haste-app.git
+	cd haste-app && git checkout 0.1.0.0
+	haste-cabal install ./haste-app
 	haste-cabal install --only-dependencies
 
 user-install: prepared-binary
@@ -17,9 +20,8 @@ global-install: prepared-binary
 	cp nyanbda /usr/local/bin/
 
 prepared-binary: binary web
-	strip -s dist/build/nyanbda/nyanbda
-	embedtool -p1 -r -w dist/build/nyanbda/nyanbda _site/*
-	cp dist/build/nyanbda/nyanbda ./
+	strip -s ./nyanbda || strip -s ./nyanbda.exe
+	embedtool -p1 -r -w ./nyanbda _site/*
 
 web:
 	hastec WebMain.hs
@@ -29,5 +31,4 @@ web:
 	mv WebMain.js _site/WebMain.js
 
 binary:
-	cabal configure
-	cabal build
+	stack install --local-bin-path .
