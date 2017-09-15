@@ -12,6 +12,11 @@ category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
 
+extra-source-files:
+  assets/*.css
+  assets/*.html
+  assets/*.js
+
 flag haste
   description: Package is being built with Haste
   default: False

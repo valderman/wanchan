@@ -1,17 +1,23 @@
-STACKOPTS=--split-objs --local-bin-path .
+STACKOPTS=--split-objs --local-bin-path ./artefacts
 
 binary: web
 	stack install $(STACKOPTS) || /usr/local/bin/stack install $(STACKOPTS)
-	strip -s ./nyanbda || strip -s ./nyanbda.exe
+	strip -s artefacts/nyanbda || strip -s artefacts/nyanbda.exe
 
-all: deb
+all: deb cabal
 
-deb:
+deb: binary
+	mkdir -p artefacts
 	debuild -us -ec -b
-	mv ../nyanbda_*_amd64.deb ./
+	mv ../nyanbda_*_amd64.deb artefacts/
 	rm ../nyanbda_*_amd64.build
 	rm ../nyanbda_*_amd64.buildinfo
 	rm ../nyanbda_*_amd64.changes
+
+cabal: web
+	mkdir -p artefacts
+	cabal sdist
+	mv dist/nyanbda-*.tar.gz artefacts
 
 help:
 	@echo "The following targets are available:"
@@ -23,18 +29,18 @@ help:
 	@echo "  user-install:   build and install binary into ~/.local/bin"
 
 deps:
+	stack update
+	haste-cabal update
 	stack setup
-	git clone https://github.com/valderman/haste-app.git
-	cd haste-app && git checkout 0.1.0.0
-	haste-cabal install ./haste-app
+	haste-cabal install haste-app
 	haste-cabal install --only-dependencies
 
-user-install: prepared-binary
+user-install: binary
 	mkdir -p ~/.local/bin
-	cp nyanbda ~/.local/bin/
+	cp artefacts/nyanbda ~/.local/bin/
 
-global-install: prepared-binary
-	cp nyanbda /usr/local/bin/
+global-install: binary
+	cp artefacts/nyanbda /usr/local/bin/
 
 web:
-	hastec WebMain.hs
+	hastec WebMain.hs -oassets/WebMain.js

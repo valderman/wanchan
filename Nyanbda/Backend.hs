@@ -143,7 +143,7 @@ webDaemon minutes cfg = do
       case uriPath $ rqURI req of
         "/"            -> respond $(embedFile "assets/index.html")
         "/index.html"  -> respond $(embedFile "assets/index.html")
-        "/WebMain.js"  -> respond $(embedFile "WebMain.js")
+        "/WebMain.js"  -> respond $(embedFile "assets/WebMain.js")
         "/nyanbda.css" -> respond $(embedFile "assets/nyanbda.css")
         _              -> notFound BS.empty
 

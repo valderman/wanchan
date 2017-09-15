@@ -1,22 +1,5 @@
 resolver: lts-6.35
 
-packages:
-  - location: .
-
-  - location:
-      git: https://github.com/valderman/haste-compiler.git
-      commit: b9efe0f4fcdc4aa2a5f29b15dbf0725f3cacd237
-    subdirs:
-      - libraries/haste-lib
-      - libraries/haste-prim
-    extra-dep: true
-
-  - location:
-      git: https://github.com/valderman/haste-app.git
-      commit: d8650663c4e02577ef0a658f224b3fe8f19bfc9e
-    extra-dep: true
-
-
 extra-deps:
   - selda-0.1.11.0
   - selda-sqlite-0.1.6.0
@@ -29,3 +12,6 @@ extra-deps:
   - http-client-0.5.7.0
   - http-client-tls-0.3.5.1
   - cereal-0.4.1.1
+  - haste-app-0.1.0.0
+  - haste-lib-0.6.0.0
+  - haste-prim-0.6.0.0
