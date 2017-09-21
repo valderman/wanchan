@@ -6,6 +6,7 @@ import Haste.DOM
 import Haste.Events
 import Nyanbda.Web.API
 import System.IO.Unsafe
+import Nyanbda.Web.ClientAuth
 
 #ifndef __HASTE__
 import Nyanbda.Web.Server
@@ -25,31 +26,36 @@ searchBar, searchBtn, searchResults, watchList :: Elem
     , "watchlist"
     ] return
 
-doFind :: RemotePtr (String -> Server [Series])
+doFind :: RemotePtr (String -> Auth -> Server [Series])
 doFind = static find
 
-doAddSeries :: RemotePtr (Series -> Server [Series])
+doAddSeries :: RemotePtr (Series -> Auth -> Server [Series])
 doAddSeries = static addSeries
 
-doDelSeries :: RemotePtr (Series -> Server [Series])
+doDelSeries :: RemotePtr (Series -> Auth -> Server [Series])
 doDelSeries = static delSeries
 
-doGetWatched :: RemotePtr (Server [Series])
+doGetWatched :: RemotePtr (Auth -> Server [Series])
 doGetWatched = static getWatchList
 
 webMain :: IO ()
 webMain = runApp [start (Proxy :: Proxy Server)] $ void $ do
   searchBar `onEvent` KeyPress $ \13 -> trySearch searchResults searchBar
   searchBtn `onEvent` Click $ const $ trySearch searchResults searchBar
-  fork $ trySearch searchResults searchBar
-  dispatch doGetWatched >>= mapM mkDelButton >>= setChildren watchList
+  handshake 0
+
+handshake :: Int -> Client ()
+handshake retries = do
+  flip catchError (\_ -> authDialog (handshake (retries+1))) $ do
+    fork $ trySearch searchResults searchBar
+    withAuth (dispatch doGetWatched) >>= mapM mkDelButton >>= setChildren watchList
 
 -- | Get the search string from the given search bar, try the search on the
 --   server, and fill the given list element with the results.
 trySearch :: Elem -> Elem -> Client ()
 trySearch results searchbar = do
   setAttr searchbar "disabled" "true"
-  eps <- mapM mkAddButton =<< dispatch doFind =<< getProp searchbar "value"
+  eps <- mapM mkAddButton =<< withAuth (dispatch doFind) =<< getProp searchbar "value"
   setChildren results eps
   unsetAttr searchbar "disabled"
   focus searchbar
@@ -76,13 +82,13 @@ mkDelButton series = newSeriesListItem series (delFromWatchList series)
 -- | Add the given series to the watch list.
 addToWatchList :: Series -> Client ()
 addToWatchList series = do
-  watched <- dispatch doAddSeries series
+  watched <- withAuth (dispatch doAddSeries) series
   ws <- mapM mkDelButton watched
   setChildren watchList ws
 
 -- | Remove the given series from the watch list.
 delFromWatchList :: Series -> Client ()
 delFromWatchList series = do
-  watched <- dispatch doDelSeries series
+  watched <- withAuth (dispatch doDelSeries) series
   ws <- mapM mkDelButton watched
   setChildren watchList ws

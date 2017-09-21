@@ -84,5 +84,7 @@ defaultConfig = Config {
     cfgResolutions = [],
     cfgGroups      = [],
     cfgAllowDupes  = False,
-    cfgHttpPort    = 8888
+    cfgHttpPort    = 8888,
+    cfgWebUser     = "",
+    cfgWebPassword = ""
   }

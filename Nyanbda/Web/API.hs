@@ -1,11 +1,17 @@
 {-# LANGUAGE OverloadedStrings, FlexibleInstances, DeriveGeneric #-}
 module Nyanbda.Web.API
   ( Series (..)
+  , Auth (..)
   ) where
 import Haste.App
 import Haste.JSON
 import GHC.Generics
 import Nyanbda.Database
+
+data Auth = Auth
+  { authUser :: String
+  , authPass :: String
+  } deriving Show
 
 instance Node Server
 
@@ -25,6 +31,10 @@ instance Show Series where
 
 showRes :: Resolution -> String
 showRes r = case toJSON r of Str r' -> fromJSStr r'
+
+instance Serialize Auth where
+  toJSON (Auth u p) = Dict [("user", toJSON u), ("pass", toJSON p)]
+  parseJSON o = Auth <$> o .: "user" <*> o .: "pass"
 
 instance Serialize Resolution where
   toJSON HD1080  = "1080p"

@@ -15,6 +15,7 @@ import Data.Text (Text, pack, unpack)
 import Database.Selda hiding (Result)
 import Database.Selda.SQLite
 import Database.Selda.Backend (runSeldaT)
+import System.IO.Unsafe
 
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]
@@ -24,8 +25,8 @@ search cfg str = do
     handlers = map srcHandler $ cfgSources cfg
 
 -- | Search for all series given the matching string.
-find :: Import (String -> Server [Series])
-find = remote $ \s -> liftIO $ do
+find :: Import (String -> Auth -> Server [Series])
+find = remote $ \s -> withToken $ liftIO $ do
   cfg <- snd <$> getWebConfig
   mkSeries <$> shell_ (search cfg s)
 
@@ -46,23 +47,32 @@ mkSeries eps = snub
     snub = map head . group . sort
 
 -- | Add a series to the watch list.
-addSeries :: Import (Series -> Server [Series])
-addSeries = remote $ \s -> liftIO $ do
+addSeries :: Import (Series -> Auth -> Server [Series])
+addSeries = remote $ \s -> withToken $ liftIO $ do
   db <- fst <$> getWebConfig
   flip runSeldaT db $ do
     addWatch [s]
     allWatched
 
 -- | Remove a series from the watch list.
-delSeries :: Import (Series -> Server [Series])
-delSeries = remote $ \s -> liftIO $ do
+delSeries :: Import (Series -> Auth -> Server [Series])
+delSeries = remote $ \s -> withToken $ liftIO $ do
   db <- fst <$> getWebConfig
   flip runSeldaT db $ do
     removeWatch s
     allWatched
 
 -- | Get all series on the watch list.
-getWatchList :: Import (Server [Series])
-getWatchList = remote $ liftIO $ do
+getWatchList :: Import (Auth -> Server [Series])
+getWatchList = remote $ withToken $ liftIO $ do
   db <- fst <$> getWebConfig
   runSeldaT allWatched db
+
+-- | Verify a session "token", which is currently just a pair of username and
+--   password.
+withToken :: Server a -> Auth -> Server a
+withToken m auth = do
+  cfg <- snd <$> liftIO getWebConfig
+  if cfgWebUser cfg == authUser auth && cfgWebPassword cfg == authPass auth
+    then m
+    else error "bad username or password"
