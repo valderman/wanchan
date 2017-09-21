@@ -13,7 +13,7 @@ import Nyanbda.Sources
 import Nyanbda.Types
 import Nyanbda.Database
 import Database.Selda.SQLite
-import Database.Selda.Backend (runSeldaT)
+import Database.Selda.Backend (runSeldaT, SeldaConnection)
 
 -- TODO: make this conditional
 import Nyanbda.Web
@@ -28,8 +28,8 @@ runMain defconfig cmd = do
   act <- parseConfig defconfig cmd
   case act of
     SucceedWith s  -> echo s >> exit
-    List   cfg str -> initDB cfg >> get True cfg str
-    Get    cfg str -> initDB cfg >> get False cfg str
+    List   cfg str -> initDB cfg >> get Nothing True cfg str
+    Get    cfg str -> initDB cfg >> get Nothing False cfg str
     Batch  cfg str -> initDB cfg >> batch cfg (words str)
     Daemon t cfg str -> initDB cfg >> daemon t cfg (words str)
     WebDaemon t cfg _ -> webDaemon t cfg
@@ -55,19 +55,20 @@ batch cfg files = do
           void . try $ runMain cfg (mkOpts dryrun line)
 
 -- | Perform an episode search using the given config and search term.
-search :: Config -> String -> Shell [Episode]
-search cfg str = do
+search :: Maybe SeldaConnection -> Config -> String -> Shell [Episode]
+search mconn cfg str = do
     eps <- filterEpisodes cfg . concat <$> mapM (\h -> h str) handlers
-    case cfgDatabase cfg of
-      Just db -> unsafeLiftIO $ withSQLite db (filterSeen eps)
-      _       -> pure eps
+    case (mconn, cfgDatabase cfg) of
+      (Just db, _) -> unsafeLiftIO $ runSeldaT (filterSeen eps) db
+      (_, Just db) -> unsafeLiftIO $ withSQLite db (filterSeen eps)
+      _            -> pure eps
   where
     handlers = map srcHandler $ cfgSources cfg
 
 -- | Print and download all episodes matching search and filters.
-get :: Bool -> Config -> String -> Shell ()
-get dryrun cfg str = do
-    items <- search cfg str
+get :: Maybe SeldaConnection -> Bool -> Config -> String -> Shell ()
+get mconn dryrun cfg str = do
+    items <- search mconn cfg str
     when (null items) $ fail "no matching items to download"
 
     if dryrun
@@ -96,9 +97,10 @@ get dryrun cfg str = do
       mapM_ (liftIO . system) cmds
 
       -- Save to seen file, if applicable
-      case cfgDatabase cfg of
-        Just db -> unsafeLiftIO $ withSQLite db (addSeen items)
-        _       -> return ()
+      case (mconn, cfgDatabase cfg) of
+        (Just db, _) -> unsafeLiftIO $ runSeldaT (addSeen items) db
+        (_, Just db) -> unsafeLiftIO $ withSQLite db (addSeen items)
+        _            -> return ()
   where
     mkFileName ep = outdir </> episodeName cfg ep <.> "torrent"
     download ep = fetchFile (mkFileName ep) (torrentLink ep)
@@ -122,12 +124,12 @@ webDaemon minutes cfg = do
   where
     update db = do
       series <- unsafeLiftIO $ runSeldaT allWatched db
-      mapM_ check series
+      mapM_ (check db) series
       echo $ "Done! Next run in " ++ show minutes ++ " minutes."
       unsafeLiftIO $ wait minutes
       update db
 
-    check series = do
+    check db series = do
       let cfg' = cfg
             { cfgResolutions = [seriesResolution series]
             , cfgSeasons = [seriesSeason series]
@@ -137,7 +139,7 @@ webDaemon minutes cfg = do
             }
           name = Nyanbda.Database.seriesName series
       echo $ "Checking for new episodes of " ++ name ++ "..."
-      void . try $ get False cfg' name
+      void . try $ get (Just db) False cfg' name
 
     assets req = do
       case uriPath $ rqURI req of
