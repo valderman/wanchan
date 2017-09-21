@@ -55,7 +55,13 @@ data Config = Config {
     cfgAllowDupes  :: Bool,
 
     -- | Port to serve web UI from in web daemon mode.
-    cfgHttpPort :: Int
+    cfgHttpPort :: Int,
+
+    -- | Username required to access web UI.
+    cfgWebUser :: String,
+
+    -- | Password required to access web UI.
+    cfgWebPassword :: String
   }
 
 -- | Show an episode name appropriately according to config.

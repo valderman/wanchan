@@ -126,15 +126,17 @@ opts =
     "If no source is specified, all supported sources are searched."
   ]
   ++ supportedSourceOpts ++
-  [ Left "Misc. options"
-  , Right $ Option "i" ["interactive"] (NoArg (setInteractive True)) $
-    "Prompt the user before downloading files. " ++
-    "This is the default behavior."
-  , Right $ Option "f" ["force"]       (NoArg (setInteractive False)) $
-    "Don't prompt the user before downloading files."
+  [ Left "Web daemon options"
   , Right $ Option "p" ["port"]        (ReqArg setPort "PORT") $
     "Listen for incoming HTTP connections on PORT." ++
     "Only applies to web daemon mode."
+  , Right $ Option "U" ["user"]        (ReqArg setUser "USER") $
+    "Require USER as the username to access the web interface." ++
+    "Only applies to web daemon mode."
+  , Right $ Option "P" ["password"]    (ReqArg setPass "PASS") $
+    "Require PASS as the password to access the web interface." ++
+    "Only applies to web daemon mode."
+  , Left "Misc. options"
   , Right $ Option "b"  ["database"]   (ReqArg setDatabase "FILE") $
     "Use FILE as this sessions database file. Episodes present in the " ++
     "database's seen episodes list will be considered already seen, " ++
@@ -143,6 +145,11 @@ opts =
     "using this option will be appended to the seen list as well." ++
     "Additionally, in web daemon mode, the list of series to watch for" ++
     "is also stored in this database."
+  , Right $ Option "i" ["interactive"] (NoArg (setInteractive True)) $
+    "Prompt the user before downloading files. " ++
+    "This is the default behavior."
+  , Right $ Option "f" ["force"]       (NoArg (setInteractive False)) $
+    "Don't prompt the user before downloading files."
   , Right $ Option "h?" ["help"]       (NoArg printHelp) "Display this message."
   ]
 
@@ -385,9 +392,17 @@ setDaemon t = setAction (Daemon (read t))
 setWebDaemon :: String -> Option
 setWebDaemon t = setAction (WebDaemon (read t))
 
--- | Run in web daemon mode.
+-- | Set port for web daemon mode.
 setPort :: String -> Option
 setPort p = SetFlag $ \c -> pure c {cfgHttpPort = read p}
+
+-- | Set user name for web daemon mode.
+setUser :: String -> Option
+setUser u = SetFlag $ \c -> pure c {cfgWebUser = u}
+
+-- | Set password for web daemon mode.
+setPass :: String -> Option
+setPass p = SetFlag $ \c -> pure c {cfgWebPassword = p}
 
 -- | Set command to execute for each episode.
 setExec :: String -> Option
