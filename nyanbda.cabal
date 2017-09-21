@@ -28,7 +28,8 @@ executable WebMain
     Nyanbda.Database,
     Nyanbda.Types,
     Nyanbda.Web,
-    Nyanbda.Web.API
+    Nyanbda.Web.API,
+    Nyanbda.Web.ClientAuth
   if !flag(haste)
     buildable: False
   else
@@ -58,7 +59,8 @@ executable nyanbda
     Nyanbda.Web.API,
     Nyanbda.Web.Server,
     Nyanbda.Web.HttpServer,
-    Nyanbda.Web.Config
+    Nyanbda.Web.Config,
+    Nyanbda.Web.ClientAuth
   other-extensions:
     TupleSections,
     OverloadedStrings
