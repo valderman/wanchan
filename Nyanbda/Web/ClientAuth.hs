@@ -56,32 +56,8 @@ authDialog go = do
     ]
   msg <- newTextElem "Please enter your username and password to continue."
   dlg <- newElem "div" `with`
-    [ "className" =: "auth-dialog"
-    , style "position" =: "absolute"
-    , style "margin" =: "auto"
-    , style "top" =: "10%"
-    , style "left" =: "0"
-    , style "right" =: "0"
-    , style "width" =: "20em"
-    , style "height" =: "11em"
-    , style "border" =: "1px solid black"
-    , style "background-color" =: "white"
-    , style "padding" =: "2em"
-    , style "box-shadow" =: "0.5em 0.5em 0.5em grey"
-    , children [msg, user, pass, btn]
-    ]
-  cover <- newElem "div" `with`
-    [ style "zIndex" =: "2000000000"
-    , style "position" =: "fixed"
-    , style "margin" =: "0"
-    , style "padding" =: "0"
-    , style "top" =: "0"
-    , style "left" =: "0"
-    , style "width" =: "100%"
-    , style "height" =: "100%"
-    , style "background-color" =: "white"
-    , children [dlg]
-    ]
+    ["className" =: "dialog", children [msg, user, pass, btn]]
+  cover <- newElem "div" `with` ["className" =: "cover", children [dlg]]
   let login = do
         u <- getProp user "value"
         p <- getProp pass "value"
