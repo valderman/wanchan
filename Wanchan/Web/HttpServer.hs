@@ -1,5 +1,5 @@
 -- | Extremely minimal HTTP server.
-module Nyanbda.Web.HttpServer
+module Wanchan.Web.HttpServer
   ( module HTTP
   , module URI
   , PortNumber

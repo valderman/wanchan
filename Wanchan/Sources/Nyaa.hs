@@ -1,15 +1,15 @@
 -- | NyaaTorrents torrent source.
-module Nyanbda.Sources.Nyaa (nyaaSource) where
+module Wanchan.Sources.Nyaa (nyaaSource) where
 import Data.Bits
 import Data.Char
 import Data.Word (Word8)
 import System.Console.GetOpt
 import Text.Parsec
 import Text.Parsec.String
-import Nyanbda.Parser
-import Nyanbda.Sources.RSS
-import Nyanbda.Sources.Types
-import Nyanbda.Types (Episode (..))
+import Wanchan.Parser
+import Wanchan.Sources.RSS
+import Wanchan.Sources.Types
+import Wanchan.Types (Episode (..))
 
 -- | NyaaTorrents episode source. If no category is given, @anime-english@ is
 --   assumed.

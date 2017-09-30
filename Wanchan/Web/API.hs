@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings, FlexibleInstances, DeriveGeneric #-}
-module Nyanbda.Web.API
+module Wanchan.Web.API
   ( Series (..)
   , Auth (..)
   ) where
 import Haste.App
 import Haste.JSON
 import GHC.Generics
-import Nyanbda.Database
+import Wanchan.Database
 
 data Auth = Auth
   { authUser :: String

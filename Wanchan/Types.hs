@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards, DeriveGeneric #-}
 -- | Basic types representing episodes.
-module Nyanbda.Types where
+module Wanchan.Types where
 import GHC.Generics
 
 type URL = String

@@ -1,7 +1,7 @@
 -- | Program configuration covering all the options.
-module Nyanbda.Config where
-import Nyanbda.Sources.Types
-import Nyanbda.Types
+module Wanchan.Config where
+import Wanchan.Sources.Types
+import Wanchan.Types
 
 data Config = Config {
     -- * Global configuration
@@ -10,7 +10,7 @@ data Config = Config {
     --   directory is used.
     cfgOutdir      :: Maybe FilePath,
 
-    -- | Nyanbda's SQLite database file. Stores watch list for daemon mode,
+    -- | Wanchan's SQLite database file. Stores watch list for daemon mode,
     --   as well as the list of seen episodes.
     cfgDatabase    :: Maybe FilePath,
     

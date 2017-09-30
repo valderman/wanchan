@@ -1,15 +1,15 @@
 {-# LANGUAGE OverloadedStrings, StaticPointers, FlexibleInstances, CPP #-}
-module Nyanbda.Web where
+module Wanchan.Web where
 import Control.Monad
 import Haste.App
 import Haste.DOM
 import Haste.Events
-import Nyanbda.Web.API
+import Wanchan.Web.API
 import System.IO.Unsafe
-import Nyanbda.Web.ClientAuth
+import Wanchan.Web.ClientAuth
 
 #ifndef __HASTE__
-import Nyanbda.Web.Server
+import Wanchan.Web.Server
 #else
 find = undefined
 addSeries = undefined

@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleInstances #-}
-module Nyanbda.Web.ClientAuth (withAuth, authDialog) where
+module Wanchan.Web.ClientAuth (withAuth, authDialog) where
 import Haste.App
 import Haste.DOM
 import Haste.Events
 import System.IO.Unsafe
 import Data.IORef
-import Nyanbda.Web.API
+import Wanchan.Web.API
 
 {-# NOINLINE authref #-}
 authref :: IORef Auth

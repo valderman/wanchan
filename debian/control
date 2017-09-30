@@ -1,11 +1,11 @@
-Source: nyanbda
+Source: wanchan
 Maintainer: Anton Ekblad <anton@ekblad.cc>
 Section: web
 Priority: optional
 Standards-Version: 3.9.2
 Build-Depends: debhelper (>= 9)
 
-Package: nyanbda
+Package: wanchan
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Nyaa Torrents watcher and downloader

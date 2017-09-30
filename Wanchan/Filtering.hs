@@ -1,9 +1,9 @@
 {-# LANGUAGE RecordWildCards #-}
-module Nyanbda.Filtering (filterEpisodes) where
+module Wanchan.Filtering (filterEpisodes) where
 import Data.List
 import Data.Maybe
-import Nyanbda.Config
-import Nyanbda.Types
+import Wanchan.Config
+import Wanchan.Types
 
 -- | Like @\\@, but does not preserve the ordering of the resulting list.
 --   Also removes every occurrences of [y <- ys] from xs, not just the first.

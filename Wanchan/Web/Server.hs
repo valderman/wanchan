@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings, TypeOperators #-}
-module Nyanbda.Web.Server (find, addSeries, delSeries, getWatchList) where
+module Wanchan.Web.Server (find, addSeries, delSeries, getWatchList) where
 import Haste.App
 import Control.Shell hiding (Result)
-import Nyanbda.Config
-import Nyanbda.Database
-import Nyanbda.Filtering
-import Nyanbda.Sources
-import Nyanbda.Types
-import Nyanbda.Web.Config
-import Nyanbda.Web.API
+import Wanchan.Config
+import Wanchan.Database
+import Wanchan.Filtering
+import Wanchan.Sources
+import Wanchan.Types
+import Wanchan.Web.Config
+import Wanchan.Web.API
 import Data.List (sort, group)
 import Data.Maybe (isJust)
 import Data.Text (Text, pack, unpack)
@@ -33,7 +33,7 @@ find = remote $ \s -> withToken $ liftIO $ do
 mkSeries :: [Episode] -> [Series]
 mkSeries eps = snub
   [ Series
-    { Nyanbda.Database.seriesName = Nyanbda.Types.seriesName ep
+    { Wanchan.Database.seriesName = Wanchan.Types.seriesName ep
     , seriesGroup = group
     , seriesResolution = res
     , seriesSeason = maybe 1 id (seasonNumber ep)

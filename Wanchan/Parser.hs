@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections, OverloadedStrings #-}
 -- | Parse episode data from episode titles and file names.
-module Nyanbda.Parser (
+module Wanchan.Parser (
     -- * Parsing episode titles
     parseEpisode, parseEpisodeFrom,
 
@@ -19,7 +19,7 @@ import System.FilePath (takeExtension, dropExtension)
 import Text.Parsec.String
 import Text.Parsec.Char
 import Text.Parsec
-import Nyanbda.Types
+import Wanchan.Types
 
 -- | Parse an episode from either of the western or anime standard formats.
 parseEpisode :: String -> Episode

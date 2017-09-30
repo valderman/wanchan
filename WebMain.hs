@@ -1,4 +1,4 @@
 module Main where
-import Nyanbda.Web
+import Wanchan.Web
 
 main = webMain

@@ -1,8 +1,8 @@
 -- | Basic torrent source types.
-module Nyanbda.Sources.Types (Source (..), SourceOpt, SourceHandler) where
+module Wanchan.Sources.Types (Source (..), SourceOpt, SourceHandler) where
 import Control.Shell
 import System.Console.GetOpt
-import Nyanbda.Types
+import Wanchan.Types
 
 -- | Describes a torrent source.
 data Source = Source {

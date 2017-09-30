@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, TypeOperators, DeriveGeneric, FlexibleInstances, GADTs #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Nyanbda.Database
+module Wanchan.Database
   ( Series (..), SeenEpisode (..), Resolution (..)
   , initialize
   , filterSeen, addSeen
@@ -9,7 +9,7 @@ module Nyanbda.Database
 import Database.Selda
 import Database.Selda.Backend
 import Database.Selda.Generic
-import Nyanbda.Types as Episode (Episode (..), Resolution (..))
+import Wanchan.Types as Episode (Episode (..), Resolution (..))
 import Data.Text (pack, unpack)
 
 instance SqlType Resolution where
@@ -91,7 +91,7 @@ addWatch series = do
 removeWatch :: Series -> SeldaM ()
 removeWatch s = do
   deleteFrom_ (gen watchTable) $ \(n :*: ssn :*: g :*: r) ->
-    n .== literal (Nyanbda.Database.seriesName s) .&&
+    n .== literal (Wanchan.Database.seriesName s) .&&
     ssn .== literal (seriesSeason s) .&&
     g .== literal (seriesGroup s) .&&
     r .== literal (seriesResolution s)

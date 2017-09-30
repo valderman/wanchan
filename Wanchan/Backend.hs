@@ -1,24 +1,24 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Nyanbda.Backend (runMain, batch, search, get) where
+module Wanchan.Backend (runMain, batch, search, get) where
 import qualified Control.Concurrent as CC (threadDelay, forkIO)
 import Control.Shell
 import Control.Shell.Concurrent
 import Control.Shell.Download
 import Data.List (intercalate)
 import System.Process (system)
-import Nyanbda.Config
-import Nyanbda.Filtering
-import Nyanbda.Opts
-import Nyanbda.Sources
-import Nyanbda.Types
-import Nyanbda.Database
+import Wanchan.Config
+import Wanchan.Filtering
+import Wanchan.Opts
+import Wanchan.Sources
+import Wanchan.Types
+import Wanchan.Database
 import Database.Selda.SQLite
 import Database.Selda.Backend (runSeldaT, SeldaConnection)
 
 -- TODO: make this conditional
-import Nyanbda.Web
-import Nyanbda.Web.Config
-import Nyanbda.Web.HttpServer
+import Wanchan.Web
+import Wanchan.Web.Config
+import Wanchan.Web.HttpServer
 import Data.FileEmbed
 import qualified Data.ByteString as BS
 
@@ -112,7 +112,7 @@ webDaemon :: Int -> Config -> Shell ()
 webDaemon minutes cfg = do
     db <- unsafeLiftIO $ case cfgDatabase cfg of
       Just f -> putStrLn ("using database `" ++ f ++ "'") >> sqliteOpen f
-      _      -> putStrLn "using temporary in-memory database" >> sqliteOpen "nyanbda.sqlite"
+      _      -> putStrLn "using temporary in-memory database" >> sqliteOpen "wanchan.sqlite"
     unsafeLiftIO $ setWebConfig db cfg
     echo $ "Scheduling updates every " ++ show minutes ++ " minutes."
     unsafeLiftIO $ runSeldaT initialize db
@@ -137,7 +137,7 @@ webDaemon minutes cfg = do
             , cfgGroups = [seriesGroup series]
             , cfgInteractive = False
             }
-          name = Nyanbda.Database.seriesName series
+          name = Wanchan.Database.seriesName series
       echo $ "Checking for new episodes of " ++ name ++ "..."
       void . try $ get (Just db) False cfg' name
 
@@ -146,7 +146,7 @@ webDaemon minutes cfg = do
         "/"            -> respond $(embedFile "assets/index.html")
         "/index.html"  -> respond $(embedFile "assets/index.html")
         "/WebMain.js"  -> respond $(embedFile "assets/WebMain.js")
-        "/nyanbda.css" -> respond $(embedFile "assets/nyanbda.css")
+        "/wanchan.css" -> respond $(embedFile "assets/wanchan.css")
         _              -> notFound BS.empty
 
 -- | Run in daemon mode: like batch mode, but re-run every n minutes.

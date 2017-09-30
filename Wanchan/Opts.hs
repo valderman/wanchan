@@ -1,15 +1,15 @@
 -- | ADT describing the command line options to 
-module Nyanbda.Opts (Action (..), parseConfig) where
+module Wanchan.Opts (Action (..), parseConfig) where
 import Control.Shell
 import Data.List (sortBy, intercalate)
 import Data.Maybe (catMaybes)
 import System.Console.GetOpt
 import Text.Parsec as P
 import Text.Parsec.String
-import Nyanbda.Config
-import Nyanbda.Parser
-import Nyanbda.Sources
-import Nyanbda.Types
+import Wanchan.Config
+import Wanchan.Parser
+import Wanchan.Sources
+import Wanchan.Types
 
 -- | The action to be taken by the main program.
 data Action

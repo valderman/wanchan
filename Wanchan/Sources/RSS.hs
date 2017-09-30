@@ -1,5 +1,5 @@
 -- | RSS 2.0 feed source.
-module Nyanbda.Sources.RSS (rssSource, rssHandler) where
+module Wanchan.Sources.RSS (rssSource, rssHandler) where
 import Control.Shell
 import Control.Shell.Download
 import Control.Shell.Concurrent
@@ -7,9 +7,9 @@ import Data.Maybe (catMaybes)
 import System.Console.GetOpt
 import Text.Feed.Types
 import Text.RSS.Syntax
-import Nyanbda.Parser
-import Nyanbda.Sources.Types
-import Nyanbda.Types
+import Wanchan.Parser
+import Wanchan.Sources.Types
+import Wanchan.Types
 import Data.ByteString.Char8 (pack)
 import Data.ByteString.UTF8 (toString)
 

@@ -1,9 +1,9 @@
-name:                nyanbda
+name:                wanchan
 version:             0.1.0.0
 synopsis:            Intelligent anime torrent downloader
 description:         Search, query, download and keep on top of episodes from
                      Nyaa Torrents.
-homepage:            https://github.com/valderman/nyanbda
+homepage:            https://github.com/valderman/wanchan
 license:             MIT
 license-file:        LICENSE
 author:              Anton Ekblad
@@ -25,11 +25,11 @@ executable WebMain
   main-is:
     WebMain.hs
   other-modules:
-    Nyanbda.Database,
-    Nyanbda.Types,
-    Nyanbda.Web,
-    Nyanbda.Web.API,
-    Nyanbda.Web.ClientAuth
+    Wanchan.Database,
+    Wanchan.Types,
+    Wanchan.Web,
+    Wanchan.Web.API,
+    Wanchan.Web.ClientAuth
   if !flag(haste)
     buildable: False
   else
@@ -40,27 +40,27 @@ executable WebMain
       haste-lib >=0.6    && <0.7,
       haste-app >=0.1    && <0.2
 
-executable nyanbda
+executable wanchan
   main-is:
     Main.hs
   other-modules:
-    Nyanbda.Backend,
-    Nyanbda.Config,
-    Nyanbda.Database,
-    Nyanbda.Filtering,
-    Nyanbda.Opts,
-    Nyanbda.Sources,
-    Nyanbda.Sources.Nyaa,
-    Nyanbda.Sources.RSS,
-    Nyanbda.Sources.Types,
-    Nyanbda.Types,
-    Nyanbda.Parser,
-    Nyanbda.Web,
-    Nyanbda.Web.API,
-    Nyanbda.Web.Server,
-    Nyanbda.Web.HttpServer,
-    Nyanbda.Web.Config,
-    Nyanbda.Web.ClientAuth
+    Wanchan.Backend,
+    Wanchan.Config,
+    Wanchan.Database,
+    Wanchan.Filtering,
+    Wanchan.Opts,
+    Wanchan.Sources,
+    Wanchan.Sources.Nyaa,
+    Wanchan.Sources.RSS,
+    Wanchan.Sources.Types,
+    Wanchan.Types,
+    Wanchan.Parser,
+    Wanchan.Web,
+    Wanchan.Web.API,
+    Wanchan.Web.Server,
+    Wanchan.Web.HttpServer,
+    Wanchan.Web.Config,
+    Wanchan.Web.ClientAuth
   other-extensions:
     TupleSections,
     OverloadedStrings

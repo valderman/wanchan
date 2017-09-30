@@ -1,6 +1,6 @@
-module Nyanbda.Web.Config (getWebConfig, setWebConfig) where
+module Wanchan.Web.Config (getWebConfig, setWebConfig) where
 import Data.IORef
-import Nyanbda.Config
+import Wanchan.Config
 import System.IO.Unsafe
 import Database.Selda.Backend
 
