@@ -12,6 +12,7 @@ import Wanchan.Opts
 import Wanchan.Sources
 import Wanchan.Types
 import Wanchan.Database
+import Database.Selda (setLocalCache)
 import Database.Selda.SQLite
 import Database.Selda.Backend (runSeldaT, SeldaConnection)
 
@@ -26,6 +27,7 @@ import qualified Data.ByteString.Char8 as BS
 runMain :: Config -> [String] -> Shell ()
 runMain defconfig cmd = do
   act <- parseConfig defconfig cmd
+  setLocalCache 1000
   case act of
     SucceedWith s  -> echo s >> exit
     List   cfg str -> initDB cfg >> get Nothing True cfg str
