@@ -7,7 +7,6 @@ dist/
 *.jsmod
 _site
 *.sqlite
-nyanbda
 WebMain.js
 haste-app
 *.deb
