@@ -159,7 +159,7 @@ printHelp :: Option
 printHelp = setAction $ \_ _ -> SucceedWith helpMessage
   where
     helpMessage = unlines $
-      [ "Usage: nyan [OPTIONS] SEARCH STRING"
+      [ "Usage: wanchan [OPTIONS] SEARCH STRING"
       , ""
       , "Effortlessly manage downloads of TV series and other media."
       , ""
