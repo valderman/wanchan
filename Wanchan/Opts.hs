@@ -127,8 +127,19 @@ opts =
   ]
   ++ supportedSourceOpts ++
   [ Left "Web daemon options"
+  , Right $ Option "H" ["host"]        (ReqArg setHost "HOST") $
+    "Web daemon is reachable on HOST. If unset, the web daemon is only " ++
+    "reachable from the computer where it is running." ++
+    "Only applies to web daemon mode."
   , Right $ Option "p" ["port"]        (ReqArg setPort "PORT") $
-    "Listen for incoming HTTP connections on PORT." ++
+    "Listen for incoming HTTP connections on PORT. Defaults to 8888" ++
+    "You need to forward this port, in addition to the API port, to make" ++
+    "the web daemon reachable from the Internet if you're behind a router." ++
+    "Only applies to web daemon mode."
+  , Right $ Option "q" ["api-port"]    (ReqArg setApiPort "PORT") $
+    "Use PORT for internal web daemon communication. You need to forward " ++
+    "this port in addition to the HTTP port, if you're behind a router and " ++
+    "want the web daemon to be reachable from the Internet." ++
     "Only applies to web daemon mode."
   , Right $ Option "U" ["user"]        (ReqArg setUser "USER") $
     "Require USER as the username to access the web interface." ++
@@ -392,9 +403,17 @@ setDaemon t = setAction (Daemon (read t))
 setWebDaemon :: String -> Option
 setWebDaemon t = setAction (WebDaemon (read t))
 
+-- | Set host for web daemon mode.
+setHost :: String -> Option
+setHost h = SetFlag $ \c -> pure c {cfgWebHost = h}
+
 -- | Set port for web daemon mode.
 setPort :: String -> Option
 setPort p = SetFlag $ \c -> pure c {cfgHttpPort = read p}
+
+-- | Set API port for web daemon mode.
+setApiPort :: String -> Option
+setApiPort p = SetFlag $ \c -> pure c {cfgApiPort = read p}
 
 -- | Set user name for web daemon mode.
 setUser :: String -> Option

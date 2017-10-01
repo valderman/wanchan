@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module Wanchan.Backend (runMain, batch, search, get) where
 import qualified Control.Concurrent as CC (threadDelay, forkIO)
 import Control.Shell
@@ -20,7 +20,7 @@ import Wanchan.Web
 import Wanchan.Web.Config
 import Wanchan.Web.HttpServer
 import Data.FileEmbed
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 
 -- | Main entry point of application.
 runMain :: Config -> [String] -> Shell ()
@@ -141,12 +141,20 @@ webDaemon minutes cfg = do
       echo $ "Checking for new episodes of " ++ name ++ "..."
       void . try $ get (Just db) False cfg' name
 
+    index = $(embedFile "assets/index.html")
+    js = BS.concat
+      [ $(embedFile "assets/WebMain.js")
+      , "window.__wanchan_host = '", BS.pack (cfgWebHost cfg), "';"
+      , "window.__wanchan_port = ", BS.pack (show (cfgApiPort cfg)), ";"
+      ]
+    css = $(embedFile "assets/wanchan.css")
+
     assets req = do
       case uriPath $ rqURI req of
-        "/"            -> respond $(embedFile "assets/index.html")
-        "/index.html"  -> respond $(embedFile "assets/index.html")
-        "/WebMain.js"  -> respond $(embedFile "assets/WebMain.js")
-        "/wanchan.css" -> respond $(embedFile "assets/wanchan.css")
+        "/"            -> respond index
+        "/index.html"  -> respond index
+        "/WebMain.js"  -> respond js
+        "/wanchan.css" -> respond css
         _              -> notFound BS.empty
 
 -- | Run in daemon mode: like batch mode, but re-run every n minutes.

@@ -1,19 +1,35 @@
-{-# LANGUAGE OverloadedStrings, FlexibleInstances, DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings, FlexibleInstances, DeriveGeneric, CPP #-}
 module Wanchan.Web.API
   ( Series (..)
   , Auth (..)
   ) where
 import Haste.App
+import Haste.Foreign
 import Haste.JSON
 import GHC.Generics
+import System.IO.Unsafe
 import Wanchan.Database
+
+#ifndef __HASTE__
+import Wanchan.Config
+import Wanchan.Web.Config
+#endif
 
 data Auth = Auth
   { authUser :: String
   , authPass :: String
   } deriving Show
 
-instance Node Server
+instance Node Server where
+  endpoint = unsafePerformIO $ do
+#ifdef __HASTE__
+    host <- ffi "(function(){return window.__wanchan_host;})"
+    port <- ffi "(function(){return window.__wanchan_port;})"
+    return $ remoteEndpoint host (read port)
+#else
+    (_, cfg) <- getWebConfig
+    return $ remoteEndpoint (cfgWebHost cfg) (cfgApiPort cfg)
+#endif
 
 instance Show Series where
   show s = concat
