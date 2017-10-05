@@ -50,6 +50,7 @@ createChoiceDialog title alts = do
   menu <- newElem "ul" `with`
     [ style "list-style-type" =: "none"
     , style "margin-left" =: "1em"
+    , style "padding" =: "0"
     , children (map fst es)
     ]
   dlg <- createModalDialog title [menu]
