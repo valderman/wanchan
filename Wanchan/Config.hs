@@ -13,7 +13,7 @@ data Config = Config {
     -- | Wanchan's SQLite database file. Stores watch list for daemon mode,
     --   as well as the list of seen episodes.
     cfgDatabase    :: Maybe FilePath,
-
+    
     -- | Sources to search.
     cfgSources     :: [Source],
 
@@ -26,9 +26,9 @@ data Config = Config {
     -- | Execute this shell command for each downloaded torrent.
     cfgExec :: Maybe (FilePath -> Episode -> String),
 
-
+    
     -- * Episode filters
-
+    
     -- | Permissible seasons.
     cfgSeasons     :: [Int],
 
@@ -40,7 +40,7 @@ data Config = Config {
     --   episode of each season. Otherwise, the latest episode of the latest
     --   season will be matched.
     cfgMatchLatest :: Bool,
-
+    
     -- | Permissible file extensions.
     cfgExtensions  :: [String],
 
@@ -53,12 +53,6 @@ data Config = Config {
     -- | Allow several copies with different resolution, etc. of the same
     --   episode?
     cfgAllowDupes  :: Bool,
-
-    -- | Host on which the web daemon can be reached.
-    cfgWebHost :: String,
-
-    -- | Port on which the web daemon Haste.App API can be reached.
-    cfgApiPort :: Int,
 
     -- | Port to serve web UI from in web daemon mode.
     cfgHttpPort :: Int,
@@ -91,8 +85,6 @@ defaultConfig = Config {
     cfgGroups      = [],
     cfgAllowDupes  = False,
     cfgHttpPort    = 8888,
-    cfgApiPort     = 24601,
-    cfgWebHost     = "localhost",
     cfgWebUser     = "",
     cfgWebPassword = ""
   }
