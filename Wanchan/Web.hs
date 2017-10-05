@@ -7,6 +7,9 @@ import Haste.Events
 import Wanchan.Web.API
 import System.IO.Unsafe
 import Wanchan.Web.ClientAuth
+import Wanchan.Web.Dialog
+import Haste.Foreign
+import System.IO.Unsafe
 
 #ifndef __HASTE__
 import Wanchan.Web.Server
@@ -16,6 +19,15 @@ addSeries = undefined
 delSeries = undefined
 getWatchList = undefined
 #endif
+
+encodeURI' :: String -> IO String
+encodeURI' = ffi "encodeURI"
+
+encodeURI :: String -> String
+encodeURI = unsafePerformIO . encodeURI'
+
+newTab :: String -> IO ()
+newTab = ffi "(function(uri){window.open(uri, '_blank')})"
 
 searchBar, searchBtn, searchResults, watchList :: Elem
 [searchBar, searchBtn, searchResults, watchList] =
@@ -55,10 +67,25 @@ handshake retries = do
 trySearch :: Elem -> Elem -> Client ()
 trySearch results searchbar = do
   setAttr searchbar "disabled" "true"
-  eps <- mapM mkAddButton =<< withAuth (dispatch doFind) =<< getProp searchbar "value"
-  setChildren results eps
+  populateResults results =<< withAuth (dispatch doFind) =<< getProp searchbar "value"
   unsetAttr searchbar "disabled"
   focus searchbar
+
+populateResults :: Elem -> [Series] -> Client ()
+populateResults list rs = do
+    setChildren list =<< mapM mkResultDialogButton rs
+  where
+    mkResultDialogButton s = do
+      let name = seriesName s
+      dlg <- createChoiceDialog name
+        [ ("Add to watch list", addToWatchList s)
+        , ("Search AniList", liftIO . newTab $ searchAniList name)
+        , ("Search ANN", liftIO . newTab $ searchANN name)
+        ]
+      newSeriesListItem s (showDialog dlg)
+
+    searchAniList s = "https://anilist.co/search?type=all&q=" ++ encodeURI s
+    searchANN s = "https://www.animenewsnetwork.com/encyclopedia/search/name?q=" ++ encodeURI s
 
 -- | Create a new list item element from the given series, which performs
 --   the given computation when clicked.

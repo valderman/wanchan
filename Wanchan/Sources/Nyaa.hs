@@ -9,7 +9,7 @@ import Text.Parsec.String
 import Wanchan.Parser
 import Wanchan.Sources.RSS
 import Wanchan.Sources.Types
-import Wanchan.Types (Episode (..))
+
 
 -- | NyaaTorrents episode source. If no category is given, @anime-english@ is
 --   assumed.
@@ -31,7 +31,7 @@ data NyaaCat
 -- | Borrowed from @HTTP@ to avoid having to pull in the entire package.
 urlEncode :: String -> String
 urlEncode     [] = []
-urlEncode (ch:t) 
+urlEncode (ch:t)
   | (isAscii ch && isAlphaNum ch) || ch `elem` "-_.~" = ch : urlEncode t
   | not (isAscii ch) = foldr escape (urlEncode t) (encodeChar ch)
   | otherwise = escape (fromIntegral (fromEnum ch)) (urlEncode t)

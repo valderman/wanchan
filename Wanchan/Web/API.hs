@@ -4,15 +4,16 @@ module Wanchan.Web.API
   , Auth (..)
   ) where
 import Haste.App
-import Haste.Foreign
 import Haste.JSON
-import GHC.Generics
 import System.IO.Unsafe
 import Wanchan.Database
 
 #ifndef __HASTE__
 import Wanchan.Config
 import Wanchan.Web.Config
+#else
+import System.IO.Unsafe
+import Haste.Foreign
 #endif
 
 data Auth = Auth

@@ -4,18 +4,14 @@ import Haste.App
 import Control.Shell hiding (Result)
 import Wanchan.Config
 import Wanchan.Database
-import Wanchan.Filtering
 import Wanchan.Sources
 import Wanchan.Types
 import Wanchan.Web.Config
 import Wanchan.Web.API
 import Data.List (sort, group)
 import Data.Maybe (isJust)
-import Data.Text (Text, pack, unpack)
-import Database.Selda hiding (Result)
-import Database.Selda.SQLite
 import Database.Selda.Backend (runSeldaT)
-import System.IO.Unsafe
+
 
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]

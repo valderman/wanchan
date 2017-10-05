@@ -10,8 +10,8 @@ import Text.RSS.Syntax
 import Wanchan.Parser
 import Wanchan.Sources.Types
 import Wanchan.Types
-import Data.ByteString.Char8 (pack)
-import Data.ByteString.UTF8 (toString)
+
+
 
 rssSource :: Source
 rssSource = Source {

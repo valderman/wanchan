@@ -6,6 +6,7 @@ import Haste.Events
 import System.IO.Unsafe
 import Data.IORef
 import Wanchan.Web.API
+import Wanchan.Web.Dialog
 
 {-# NOINLINE authref #-}
 authref :: IORef Auth
@@ -55,17 +56,15 @@ authDialog go = do
     , style "font-size" =: "large"
     ]
   msg <- newTextElem "Please enter your username and password to continue."
-  dlg <- newElem "div" `with`
-    ["className" =: "dialog", children [msg, user, pass, btn]]
-  cover <- newElem "div" `with` ["className" =: "cover", children [dlg]]
+  dlg <- createModalDialog "Wanchan login" [msg, user, pass, btn]
   let login = do
         u <- getProp user "value"
         p <- getProp pass "value"
         setAuth u p
-        deleteChild documentBody cover
+        hideDialog dlg
         go
   btn `onEvent` Click $ \_ -> login
   user `onEvent` KeyPress $ \13 -> login
   pass `onEvent` KeyPress $ \13 -> login
-  appendChild documentBody cover
+  showDialog dlg
   focus user

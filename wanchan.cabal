@@ -29,7 +29,8 @@ executable WebMain
     Wanchan.Types,
     Wanchan.Web,
     Wanchan.Web.API,
-    Wanchan.Web.ClientAuth
+    Wanchan.Web.ClientAuth,
+    Wanchan.Web.Dialog
   if !flag(haste)
     buildable: False
   else
@@ -60,7 +61,8 @@ executable wanchan
     Wanchan.Web.Server,
     Wanchan.Web.HttpServer,
     Wanchan.Web.Config,
-    Wanchan.Web.ClientAuth
+    Wanchan.Web.ClientAuth,
+    Wanchan.Web.Dialog
   other-extensions:
     TupleSections,
     OverloadedStrings
