@@ -78,9 +78,9 @@ populateResults list rs = do
     mkResultDialogButton s = do
       let name = seriesName s
       dlg <- createChoiceDialog name
-        [ ("Add to watch list", addToWatchList s)
-        , ("Search AniList", liftIO . newTab $ searchAniList name)
-        , ("Search ANN", liftIO . newTab $ searchANN name)
+        [ ("Add to watch list", Run $ addToWatchList s)
+        , ("Search AniList", Open $ searchAniList name)
+        , ("Search ANN", Open $ searchANN name)
         ]
       newSeriesListItem s (showDialog dlg)
 

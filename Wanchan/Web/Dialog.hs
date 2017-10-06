@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Wanchan.Web.Dialog
-  ( Dialog
+  ( Dialog, Action (..)
   , createModalDialog, createChoiceDialog
   , showDialog, hideDialog
   ) where
@@ -10,6 +10,8 @@ import Haste.Events
 import Control.Monad (forM, forM_, void)
 
 newtype Dialog = Dialog Elem
+
+data Action = Open String | Run (Client ())
 
 createModalDialog :: String -> [Elem] -> Client Dialog
 createModalDialog title content = do
@@ -28,9 +30,9 @@ createModalDialog title content = do
   void $ cover `onEvent` Click $ const (hideDialog dialog)
   return dialog
 
-createChoiceDialog :: String -> [(String, Client ())] -> Client Dialog
+createChoiceDialog :: String -> [(String, Action)] -> Client Dialog
 createChoiceDialog title alts = do
-  es <- forM alts $ \(s, m) -> do
+  es <- forM alts $ \(s, a) -> do
     caption <- newTextElem s
     link <- newElem "a" `with`
       [ style "padding" =: "0.5em"
@@ -46,7 +48,7 @@ createChoiceDialog title alts = do
       , style "font-size" =: "large"
       , children [link]
       ]
-    return (alternative, (link, m))
+    return (alternative, (link, a))
   menu <- newElem "ul" `with`
     [ style "list-style-type" =: "none"
     , style "margin-left" =: "1em"
@@ -54,8 +56,11 @@ createChoiceDialog title alts = do
     , children (map fst es)
     ]
   dlg <- createModalDialog title [menu]
-  forM_ (map snd es) $ \(link, m) -> do
-    link `onEvent` Click $ \_ -> hideDialog dlg >> m
+  forM_ (map snd es) $ \(link, a) -> do
+    case a of
+      Open url -> set link ["href" =: url, "target" =: "_blank"]
+      Run m    -> void $ link `onEvent` Click $ const m
+    void $ link `onEvent` Click $ const (hideDialog dlg)
   return dlg
 
 showDialog :: Dialog -> Client ()
