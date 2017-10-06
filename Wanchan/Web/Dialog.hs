@@ -2,14 +2,14 @@
 module Wanchan.Web.Dialog
   ( Dialog, Action (..)
   , createModalDialog, createChoiceDialog
-  , showDialog, hideDialog
+  , showDialog, showDialogAt, hideDialog
   ) where
 import Haste.App
 import Haste.DOM
 import Haste.Events
 import Control.Monad (forM, forM_, void)
 
-newtype Dialog = Dialog Elem
+data Dialog = Dialog {dialogCover :: Elem, dialogDlg :: Elem}
 
 data Action = Open String | Run (Client ())
 
@@ -26,7 +26,7 @@ createModalDialog title content = do
     ]
   dlg <- newElem "div" `with` ["className" =: "dialog", children (ttl:content)]
   cover <- newElem "div" `with` ["className" =: "cover", children [dlg]]
-  let dialog = Dialog cover
+  let dialog = Dialog cover dlg
   void $ cover `onEvent` Click $ const (hideDialog dialog)
   return dialog
 
@@ -64,7 +64,17 @@ createChoiceDialog title alts = do
   return dlg
 
 showDialog :: Dialog -> Client ()
-showDialog (Dialog e) = appendChild documentBody e
+showDialog (Dialog e _) = appendChild documentBody e
+
+showDialogAt :: Dialog -> (Int, Int) -> Client ()
+showDialogAt (Dialog e d) (x, y) = do
+  set d
+    [ style "top" =: (show (y-100) ++ "px")
+    , style "left" =: (show (x-200) ++ "px")
+    , style "position" =: "fixed"
+    , style "margin" =: "inherit"
+    ]
+  appendChild documentBody e
 
 hideDialog :: Dialog -> Client ()
-hideDialog (Dialog e) = deleteChild documentBody e
+hideDialog (Dialog e _) = deleteChild documentBody e

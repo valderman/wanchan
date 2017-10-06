@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, StaticPointers, FlexibleInstances, CPP #-}
+{-# LANGUAGE OverloadedStrings, StaticPointers, FlexibleInstances, CPP, TypeFamilies #-}
 module Wanchan.Web where
 import Control.Monad
 import Haste.App
@@ -20,14 +20,21 @@ delSeries = undefined
 getWatchList = undefined
 #endif
 
+data ContextMenuEvent = ContextMenu
+
+instance Event ContextMenuEvent where
+  type EventData ContextMenuEvent = MouseData
+  eventName ContextMenu = "contextmenu"
+  eventData _ x = eventData MouseUp x
+
 encodeURI' :: String -> IO String
 encodeURI' = ffi "encodeURI"
 
 encodeURI :: String -> String
 encodeURI = unsafePerformIO . encodeURI'
 
-newTab :: String -> IO ()
-newTab = ffi "(function(uri){window.open(uri, '_blank')})"
+toGlobal :: Elem -> (Int, Int) -> IO (Int, Int)
+toGlobal = ffi "(function(e, c) {var br = e.getBoundingClientRect(); return [c[0]+br.left, c[1]+br.top];})"
 
 searchBar, searchBtn, searchResults, watchList :: Elem
 [searchBar, searchBtn, searchResults, watchList] =
@@ -82,29 +89,30 @@ populateResults list rs = do
         , ("Search AniList", Open $ searchAniList name)
         , ("Search ANN", Open $ searchANN name)
         ]
-      newSeriesListItem s (showDialog dlg)
+      newSeriesListItem s (const $ addToWatchList s, showDialogAt dlg)
 
     searchAniList s = "https://anilist.co/search?type=all&q=" ++ encodeURI s
     searchANN s = "https://www.animenewsnetwork.com/encyclopedia/search/name?q=" ++ encodeURI s
 
 -- | Create a new list item element from the given series, which performs
 --   the given computation when clicked.
-newSeriesListItem :: Series -> (Client ()) -> Client Elem
-newSeriesListItem series handler = do
+newSeriesListItem :: Series -> ((Int, Int) -> Client (), (Int, Int) -> Client ()) -> Client Elem
+newSeriesListItem series (l, r) = do
   link <- newElem "a" `with`
     [ "innerHTML" =: show series
     , "href" =: "javascript:void(0);"
     ]
-  link `onEvent` Click $ const handler
+  void $ link `onEvent` Click $ \d ->
+    when (mouseButton d == Just MouseLeft) $ do
+      (liftIO (toGlobal link (mouseCoords d)) >>= l)
+  void $ link `onEvent` ContextMenu $ \d ->
+    preventDefault >> liftIO (toGlobal link (mouseCoords d)) >>= r
   newElem "li" `with` [children [link], "className" =: "resultrow"]
-
--- | Create a new link to add a series to the watch list.
-mkAddButton :: Series -> Client Elem
-mkAddButton series = newSeriesListItem series (addToWatchList series)
 
 -- | Create a new link to remove a series from the watch list.
 mkDelButton :: Series -> Client Elem
-mkDelButton series = newSeriesListItem series (delFromWatchList series)
+mkDelButton series =
+  newSeriesListItem series (const $ delFromWatchList series, const $ pure ())
 
 -- | Add the given series to the watch list.
 addToWatchList :: Series -> Client ()
