@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings, TypeOperators #-}
-module Wanchan.Web.Server (find, addSeries, delSeries, getWatchList) where
+module Wanchan.Web.Server
+  (find, addSeries, delSeries, getWatchList, triggerCheck
+  , updateTrigger, triggerUpdate) where
 import Haste.App
 import Control.Shell hiding (Result)
 import Wanchan.Config
@@ -11,7 +13,8 @@ import Wanchan.Web.API
 import Data.List (sort, group)
 import Data.Maybe (isJust)
 import Database.Selda.Backend (runSeldaT)
-
+import Control.Concurrent
+import System.IO.Unsafe
 
 -- | Perform an episode search using the given config and search term.
 search :: Config -> String -> Shell [Episode]
@@ -72,3 +75,16 @@ withToken m auth = do
   if cfgWebUser cfg == authUser auth && cfgWebPassword cfg == authPass auth
     then m
     else error "bad username or password"
+
+-- | Trigger a series update.
+triggerCheck :: Import (Auth -> Server ())
+triggerCheck = remote $ withToken $ liftIO triggerUpdate
+
+{-# NOINLINE updateTrigger #-}
+-- | Write to this MVar to trigger an update. Only consumed by web daemon.
+updateTrigger :: MVar ()
+updateTrigger = unsafePerformIO $ newEmptyMVar
+
+-- | Trigger an episode update from the web daemon.
+triggerUpdate :: MonadIO m => m ()
+triggerUpdate = liftIO $ putMVar updateTrigger ()

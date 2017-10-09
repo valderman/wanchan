@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Wanchan.Backend (runMain, batch, search, get) where
-import qualified Control.Concurrent as CC (threadDelay, forkIO)
+import qualified Control.Concurrent as CC
 import Control.Shell
 import Control.Shell.Concurrent
 import Control.Shell.Download
@@ -17,6 +17,7 @@ import Database.Selda.Backend (runSeldaT, SeldaConnection)
 
 -- TODO: make this conditional
 import Wanchan.Web
+import Wanchan.Web.Server (updateTrigger, triggerUpdate)
 import Wanchan.Web.Config
 import Wanchan.Web.HttpServer
 import Data.FileEmbed
@@ -120,14 +121,15 @@ webDaemon minutes cfg = do
       CC.forkIO $ serve (fromIntegral $ cfgHttpPort cfg) assets
       CC.threadDelay 1000
     forkIO $ update db
+    forkIO $ unsafeLiftIO $ forever $ wait minutes >> triggerUpdate
     unsafeLiftIO $ webMain
   where
-    update db = do
+    forever m = m >> forever m
+    update db = forever $ do
       series <- unsafeLiftIO $ runSeldaT allWatched db
       mapM_ (check db) series
       echo $ "Done! Next run in " ++ show minutes ++ " minutes."
-      unsafeLiftIO $ wait minutes
-      update db
+      unsafeLiftIO $ CC.takeMVar updateTrigger
 
     check db series = do
       let cfg' = cfg

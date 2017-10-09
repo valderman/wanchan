@@ -18,6 +18,7 @@ find = undefined
 addSeries = undefined
 delSeries = undefined
 getWatchList = undefined
+triggerCheck = undefined
 #endif
 
 data ContextMenuEvent = ContextMenu
@@ -36,13 +37,14 @@ encodeURI = unsafePerformIO . encodeURI'
 toGlobal :: Elem -> (Int, Int) -> IO (Int, Int)
 toGlobal = ffi "(function(e, c) {var br = e.getBoundingClientRect(); return [c[0]+br.left, c[1]+br.top];})"
 
-searchBar, searchBtn, searchResults, watchList :: Elem
-[searchBar, searchBtn, searchResults, watchList] =
+searchBar, searchBtn, searchResults, watchList, checkBtn :: Elem
+[searchBar, searchBtn, searchResults, watchList, checkBtn] =
   unsafePerformIO $ withElems
     [ "searchbar"
     , "searchbtn"
     , "results"
     , "watchlist"
+    , "checkbtn"
     ] return
 
 doFind :: RemotePtr (String -> Auth -> Server [Series])
@@ -57,10 +59,20 @@ doDelSeries = static delSeries
 doGetWatched :: RemotePtr (Auth -> Server [Series])
 doGetWatched = static getWatchList
 
+doTriggerCheck :: RemotePtr (Auth -> Server ())
+doTriggerCheck = static triggerCheck
+
 webMain :: IO ()
 webMain = runApp [start (Proxy :: Proxy Server)] $ void $ do
   searchBar `onEvent` KeyPress $ \13 -> trySearch searchResults searchBar
   searchBtn `onEvent` Click $ const $ trySearch searchResults searchBar
+  checkBtn `onEvent` Click $ const $ do
+    setAttr checkBtn "disabled" "true"
+    setProp checkBtn "innerText" "Checking..."
+    void $ setTimer (Once 15000) $ do
+      unsetAttr checkBtn "disabled"
+      setProp checkBtn "innerText" "Check for new episodes"
+    withAuth (dispatch doTriggerCheck)
   handshake 0
 
 handshake :: Int -> Client ()
