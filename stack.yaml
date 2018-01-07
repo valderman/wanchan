@@ -1,5 +1,8 @@
 resolver: lts-6.35
 
+system-ghc: true
+skip-ghc-check: true
+
 extra-deps:
   - selda-0.1.11.1
   - selda-sqlite-0.1.6.0

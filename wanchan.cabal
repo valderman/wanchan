@@ -95,6 +95,6 @@ executable wanchan
   default-language:
     Haskell2010
   ghc-options:
-    -Wall -static -threaded
+    -Wall -static -threaded -optl-no-pie
   extra-libraries:
     pthread
